@@ -1,0 +1,37 @@
+{% extends "gaugeviewwml/base.html" %}
+{% load tethys_gizmos %}
+{% load staticfiles %}
+
+{% block app_content %}
+    <script src="{% static 'gaugeviewwml/css/ol.css' %}" type="text/css"></script>
+
+    <!-- This extra bit of style defines the size of the "map" div tag area that shows up later -->
+    <style>
+      .map {
+        height: 600px;
+        width: 100%;
+      }
+    </style>
+
+  	<!-- Show some information to the user using basic HTML -->
+    <!--<h2>HydroCatalog</h2>-->
+
+    <!-- Specify a div tag area that will hold the map itself. -->
+    <!--This is where the map location is defined. It is referenced from the main.js file-->
+    <div id="map" class="map">
+        <!-- We need a piece of real estate for the pop up bubble, within the map space. -->
+    </div>
+    <div id="popup" class="popup">
+
+    </div>
+    <!--The main.js file contains the JavaScript to build the map and do crap with it-->
+{% endblock %}
+
+{% block app_navigation_items %}
+
+  <li class="title">Layers to Display</li>
+<div align = "center">
+  <li><input type="checkbox" onClick="AHPS_Gauges.setVisible(!AHPS_Gauges.getVisible());"  id="ch_AHPS_Gauges" name="AHPS_Gauges" checked>AHPS Gauges (Red)</li>
+  <li><input type="checkbox" onClick="USGS_Gauges.setVisible(!USGS_Gauges.getVisible());"  id="ch_USGS_Gauges" name="USGS_Gauges" checked>USGS Gauges (Blue)</li>
+</div>
+{% endblock %}

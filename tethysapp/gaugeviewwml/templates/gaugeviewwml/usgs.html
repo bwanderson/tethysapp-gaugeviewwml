@@ -1,0 +1,61 @@
+{% extends "gaugeviewwml/base.html" %}
+{% load tethys_gizmos %}
+{% load staticfiles %}
+
+{% block app_navigation_items %}
+  <li><a href="{% url 'gaugeviewwml:home' %}">Return to Map</a></li>
+
+  <p><b>Observed Streamflow Graph</b></p>
+
+<form action="/apps/gaugeviewwml/usgs/" method="get">
+    <input id="gaugeid" name="gaugeid" type="text" value="" class="hidden">
+    <input id="waterbody" name="waterbody" type="text" value="" class="hidden">
+    {% gizmo date_picker usgs_start_date_picker %}
+    {% gizmo date_picker usgs_end_date_picker %}
+
+  <p><b>Forecasted Streamflow Graph</b></p>
+
+    {% csrf_token %}
+    {% gizmo select_input forecast_range_select %}
+    {% gizmo text_input comid_input %}
+    {% gizmo date_picker forecast_date_picker %}
+    {% gizmo date_picker forecast_date_end_picker %}
+    {% gizmo select_input forecast_time_select %}
+    {% gizmo button generate_graphs_button %}
+</form>
+{% endblock %}
+
+{% block app_content %}
+  <h3>USGS Data</h3>
+
+  <p>Gauge ID: {{gaugeid}}</p>
+  <!--<p>Waterbody: {{waterbody}}</p>-->
+  <p>Link to Website: <a href="http://waterdata.usgs.gov/nwis/inventory/?site_no={{gaugeid}}" target="_blank">View Website</a></p></p>
+
+{% if 'true' in gotdata|lower %}
+   <div>
+   {% gizmo plot_view usgs_plot %}
+   </div>
+ {% else %}
+   <h6>There is no data available at this location for this time frame!</h6>
+ {% endif %}
+
+<h3>National Water Model Forecast</h3>
+
+{% if 'true' in gotComid|lower %}
+   <p>COMID: {{comid}} </p>
+   <p>Foreacst Range: {{forecast_range}}
+   </p>
+   <div>
+       {% gizmo plot_view nwm_forecast_plot %}
+   </div>
+ {% else %}
+   <h6>Please select a Forecast Range, COMID, and Forecast Date!</h6>
+ {% endif%}
+{% endblock %}
+
+{% block scripts %}
+  {{ block.super }}
+  <script src="{% static 'gaugeviewwml/vendor/export-csv.js' %}" type="text/javascript"></script>
+  <script src="{% static 'gaugeviewwml/js/usgs.js' %}" type="text/javascript"></script>
+{% endblock %}

@@ -1,0 +1,16 @@
+/*Puts space between left and right edge of words and border for popup*/
+td {
+    font-size:65%;
+    padding-left: 1em;
+    padding-right: 1em;
+}
+
+th {
+    font-size:65%;
+    padding-left: 1em;
+    padding-right: 1em;
+}
+
+.input-group {
+    width: 100%;
+}

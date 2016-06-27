@@ -1,0 +1,37 @@
+{% extends "gaugeviewwml/base.html" %}
+{% load staticfiles %}
+{% load tethys_gizmos %}
+
+{% block app_navigation_items %}
+  <li><a href="{% url 'gaugeviewwml:home' %}">Return to Map</a></li>
+{% endblock %}
+
+{% block app_content %}
+  <h4>AHPS Data</h4>
+  <p>Gauge ID: {{gaugeno}}</p>
+  <p>Waterbody: {{waterbody}}</p>
+  <p>Link to website: <a href="http://water.weather.gov/ahps2/hydrograph.php?wfo=pub&&gage={{gaugeno}}" target="_blank">View Website</a></p>
+
+{% if 'true' in gotdata|lower %}
+   <div>
+   {% gizmo plot_view timeseries_plot %}
+   </div>
+ {% else %}
+   <h6>There is no flow data available for this location!</h6>
+ {% endif%}
+
+<br>
+
+{% if 'true' in gotdata_stage|lower %}
+   <div>
+   {% gizmo plot_view timeseries_plot_stage %}
+   </div>
+ {% else %}
+   <h6>There is no stage data available for this location!</h6>
+ {% endif%}
+{% endblock %}
+
+{% block scripts %}
+  {{ block.super }}
+  <script src="{% static 'gaugeviewwml/vendor/export-csv.js' %}" type="text/javascript"></script>
+{% endblock %}
