@@ -30,7 +30,8 @@
 
   <p>Gauge ID: {{gaugeid}}</p>
   <!--<p>Waterbody: {{waterbody}}</p>-->
-  <p>Link to Website: <a href="http://waterdata.usgs.gov/nwis/inventory/?site_no={{gaugeid}}" target="_blank">View Website</a></p></p>
+  <p>Link to Website:
+      <a href="http://waterdata.usgs.gov/nwis/inventory/?site_no={{gaugeid}}" target="_blank">View Website</a></p>
 
 {% if 'true' in gotdata|lower %}
    <div>
@@ -52,6 +53,17 @@
  {% else %}
    <h6>Please select a Forecast Range, COMID, and Forecast Date!</h6>
  {% endif%}
+{% endblock %}
+
+{% block app_actions %}
+
+<!--This is basically a copy from the Snow Inspector While I get it all figured out...-->
+
+<!--<a id="waterml-link" target="_blank" href="{% url 'gaugeviewwml:waterml' %}{{waterml_url}}" -->
+   <!--class="btn btn-default">Get WaterML</a>-->
+
+<a id="waterml-link" target="_blank" href="{% url 'gaugeviewwml:waterml' %}" class="btn btn-default">Get WaterML</a>
+
 {% endblock %}
 
 {% block scripts %}
