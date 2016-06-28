@@ -1,17 +1,16 @@
-$(function() { //wait for page to load
-    $('#comid_time').parent().addClass('hidden');
+//This function is ran to set a listener to update the map size when the navigation pane is opened or closed
+(function () {
+    var target, observer, config;
+    // select the target node
+    target = $('#app-content-wrapper')[0];
 
-//inputs on usgs menu appear/disappear for analysis & assimilation, short, and mediumm
-    $('#forecast_range').on('change', function () {
-        if ($('#forecast_range').val() === 'medium_range') {
-            $('#comid_time').parent().addClass('hidden');
-            $('#forecast_date_end').parent().addClass('hidden');
-        } else if ($('#forecast_range').val() === 'short_range') {
-            $('#comid_time').parent().removeClass('hidden');
-            $('#forecast_date_end').parent().addClass('hidden');
-        } else if ($('#forecast_range').val() === 'analysis_assim'){
-            $('#comid_time').parent().addClass('hidden');
-            $('#forecast_date_end').parent().removeClass('hidden');
-        }
+    observer = new MutationObserver(function () {
+        window.setTimeout(function () {
+            $('.highcharts-plot').highcharts().reflow();
+        }, 350);
     });
-});
+
+    config = {attributes: true};
+
+    observer.observe(target, config);
+}());

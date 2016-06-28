@@ -12,11 +12,10 @@ class GaugeviewerWml(TethysAppBase):
     package = 'gaugeviewwml'
     root_url = 'gaugeviewwml'
     color = '#e67e22'
-    description = 'This app allows for viewing USGS and AHPS gauges and downloading WaterML files of the data found.'
+    description = 'Allows for viewing USGS and AHPS gauges and downloading WaterML files of the data found.'
     enable_feedback = False
     feedback_emails = []
 
-        
     def url_maps(self):
         """
         Add controllers

@@ -10,7 +10,6 @@ function dataCall(inputURL) {
 }
 
 
-
 //Here we are declaring the projection object for Web Mercator
 var projection = ol.proj.get('EPSG:3857');
 
@@ -19,6 +18,7 @@ var projection = ol.proj.get('EPSG:3857');
 var baseLayer = new ol.layer.Tile({
     source: new ol.source.MapQuest({layer: 'osm'})
 });
+
 
 //Define all WMS Sources:
 
@@ -53,6 +53,7 @@ var USGS_Gauges = new ol.layer.Tile({
 
 sources = [AHPS_Source,USGS_Source];
 layers = [baseLayer,AHPS_Gauges, USGS_Gauges];
+
 
 //Establish the view area. Note the reprojection from lat long (EPSG:4326) to Web Mercator (EPSG:3857)
 var view = new ol.View({
@@ -167,7 +168,6 @@ map.on('singleclick', function(evt) {
                 var USGS_Count = USGS_Data.documentElement.childElementCount;
 
 //                console.log(USGS_url);
-//
 //                console.log(USGS_Data);
 //                console.log(USGS_Count);//find two weeks ago date
 
@@ -182,7 +182,6 @@ map.on('singleclick', function(evt) {
                 var two_weeks_ago_str = date_str.split('T')[0]
 
                 //console.log(date_old)
-
 
                 //This is for USGS Gauges
                 for (i = 0; i < USGS_Count; i++) {
@@ -219,6 +218,7 @@ map.on('singleclick', function(evt) {
     });
     map.getTargetElement().style.cursor = hit ? 'pointer' : '';
   });
+
 
 //This function is ran to set a listener to update the map size when the navigation pane is opened or closed
 (function () {
