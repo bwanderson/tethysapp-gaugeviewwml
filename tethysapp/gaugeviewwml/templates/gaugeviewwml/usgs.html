@@ -22,7 +22,7 @@
     <!--{% gizmo date_picker forecast_date_picker %}-->
     <!--{% gizmo date_picker forecast_date_end_picker %}-->
     <!--{% gizmo select_input forecast_time_select %}-->
-    {% gizmo button generate_graphs_button %}
+    <center>{% gizmo button generate_graphs_button %}</center>
 </form>
 {% endblock %}
 
@@ -63,7 +63,9 @@
 <!--<a id="waterml-link" target="_blank" href="{% url 'gaugeviewwml:waterml' %}{{waterml_url}}" -->
    <!--class="btn btn-default">Get WaterML</a>-->
 
-<a id="waterml-link" target="_blank" href="{% url 'gaugeviewwml:waterml' %}" class="btn btn-default">Get WaterML</a>
+<a id="waterml-link" target="_blank" href="/apps/gaugeviewwml/waterml/?gaugeid={{gaugeid}}&start={{start}}&end={{end}}"
+   class="btn btn-default">Get WaterML</a>
+<!--<a id="waterml-link" target="_blank" href="/apps/gaugeviewwml/waterml" class="btn btn-default">Get WaterML</a>-->
 
 {% endblock %}
 

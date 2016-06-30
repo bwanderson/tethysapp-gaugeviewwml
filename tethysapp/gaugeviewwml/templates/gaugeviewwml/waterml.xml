@@ -1,6 +1,10 @@
 <note>
-    <to>Tove</to>
+    <to>{{ gaugeid }}</to>
     <from>Jani</from>
     <heading>Reminder</heading>
-    <body>Don't forget me this weekend!</body>
+    <body>This is really cool beans</body>
+    {% for tvp in time_series %}
+        <value censorCode="nc" dateTime="{{tvp.date}}" timeOffset="-7" dateTimeUTC="{{tvp.date}}"  methodCode="1"  sourceCode="1"  qualityControlLevelCode="1" >{{tvp.val}}</value>
+    {% endfor %}
+
 </note>

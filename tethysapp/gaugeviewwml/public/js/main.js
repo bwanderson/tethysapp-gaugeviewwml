@@ -169,7 +169,9 @@ map.on('singleclick', function(evt) {
 
 //                console.log(USGS_url);
 //                console.log(USGS_Data);
-//                console.log(USGS_Count);//find two weeks ago date
+//                console.log(USGS_Count);
+
+//find two weeks ago date
 
                 var date_old = new Date();
 

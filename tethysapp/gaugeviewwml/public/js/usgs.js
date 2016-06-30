@@ -1,4 +1,4 @@
-//This function is ran to set a listener to update the map size when the navigation pane is opened or closed
+//This function is ran to set a listener to update the plot size when the navigation pane is opened or closed
 (function () {
     var target, observer, config;
     // select the target node

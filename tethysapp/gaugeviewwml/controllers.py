@@ -20,6 +20,76 @@ def home(request):
     return render(request, 'gaugeviewwml/home.html', context)
 
 
+# Check digits in month and day (i.e. 2016-05-09, not 2016-5-9) for use in gizmos
+# This function is currently not needed, and will be needed if current_date() or date_two_wks_ago() are used
+# def check_digit(num):
+#     num_str = str(num)
+#     if len(num_str) < 2:
+#         num_str = '0' + num_str
+#     return num_str
+
+
+def get_usgs_data(gauge_id, start, end):
+    url = ('http://nwis.waterdata.usgs.gov/usa/nwis/uv/?cb_00060=on&format=rdb&site_no={0}'
+           '&period=&begin_date={1}&end_date={2}'.format(gauge_id, start, end))
+    response = urllib2.urlopen(url)
+    data = response.read()
+    return data
+
+
+#  The following two functions determine the current and two weeks past date, and may not end up being used at all.
+# def current_date():
+#     t_now = datetime.now()
+#     now_str = "{0}-{1}-{2}".format(t_now.year, check_digit(t_now.month), check_digit(t_now.day))
+#     return now_str
+#
+#
+# def date_two_wks_ago():
+#     t_now = datetime.now()
+#     two_weeks = timedelta(days=14)
+#     t_2_weeks_ago = t_now - two_weeks
+#     two_weeks_ago_str = "{0}-{1}-{2}".format(t_2_weeks_ago.year, check_digit(t_2_weeks_ago.month),
+#                                              check_digit(t_2_weeks_ago.day))
+#     return two_weeks_ago_str
+
+
+def create_time_series(data):
+    """
+    :param data: Tab separated document from NWIS including stream gauge observations
+    :return: Time series list of all streamflow values and datetime objects in the document
+    """
+    time_series_list = []
+    for line in data.splitlines():
+        if line.startswith("USGS"):
+            data_array = line.split('\t')
+            time_str = data_array[2]
+            value_str = data_array[4]
+            if value_str == "Ice":
+                value_str = "0"
+            time_str = time_str.replace(" ", "-")
+            time_str_array = time_str.split("-")
+            year = int(time_str_array[0])
+            month = int(time_str_array[1])
+            day = int(time_str_array[2])
+            hour, minute = time_str_array[3].split(":")
+            hour_int = int(hour)
+            minute_int = int(minute)
+            time_series_list.append([datetime(year, month, day, hour_int, minute_int), float(value_str)])
+    return time_series_list
+
+
+def format_time_series(data):
+    """
+    This is to make a format that Django can recognize and use while building the WaterML
+    :param data:
+    :return:
+    """
+    good_data = []
+    for val in data:
+        good_data.append({'date':val[0], 'val':val[1]})
+    return good_data
+
+
 def ahps(request):
     # Controller for the app ahps page.
 
@@ -173,17 +243,12 @@ def ahps(request):
     return render(request, 'gaugeviewwml/ahps.html', context)
 
 
-# Check digits in month and day (i.e. 2016-05-09, not 2016-5-9)
-def check_digit(num):
-    num_str = str(num)
-    if len(num_str) < 2:
-        num_str = '0' + num_str
-    return num_str
-
-
 def usgs(request):
-    # Controller for the app usgs page.
-
+    """
+    Controller for the app usgs page.
+    :param request: Is the URL request of the page
+    :return: renders the page with context available
+    """
     # Get values from gizmos
     # start = request.GET.get("start", None)
     # comid = None
@@ -205,38 +270,8 @@ def usgs(request):
     start = request.GET['start']
     end = request.GET['end']
 
-    # Find current time and time minus two weeks
-    # t_now = datetime.now()
-    # now_str = "{0}-{1}-{2}".format(t_now.year, check_digit(t_now.month), check_digit(t_now.day))
-    # two_weeks = timedelta(days=14)
-    # t_2_weeks_ago = t_now - two_weeks
-    # two_weeks_ago_str = "{0}-{1}-{2}".format(t_2_weeks_ago.year, check_digit(t_2_weeks_ago.month),
-    #                                          check_digit(t_2_weeks_ago.day))
-
-    # URL for getting USGS data
-    url = ('http://nwis.waterdata.usgs.gov/usa/nwis/uv/?cb_00060=on&format=rdb&site_no={0}'
-           '&period=&begin_date={1}&end_date={2}'.format(gauge_id, start, end))
-    response = urllib2.urlopen(url)
-    data = response.read()
-
-    # Get USGS data in a list
-    time_series_list = []
-    for line in data.splitlines():
-        if line.startswith("USGS"):
-            data_array = line.split('\t')
-            time_str = data_array[2]
-            value_str = data_array[4]
-            if value_str == "Ice":
-                value_str = "0"
-            time_str = time_str.replace(" ", "-")
-            time_str_array = time_str.split("-")
-            year = int(time_str_array[0])
-            month = int(time_str_array[1])
-            day = int(time_str_array[2])
-            hour, minute = time_str_array[3].split(":")
-            hour_int = int(hour)
-            minute_int = int(minute)
-            time_series_list.append([datetime(year, month, day, hour_int, minute_int), float(value_str)])
+    data = get_usgs_data(gauge_id,start,end)
+    time_series_list = create_time_series(data)
 
     # Check if USGS data exists for time frame
     gotdata = False
@@ -339,7 +374,7 @@ def usgs(request):
                                       # initial=t_now.strftime('%Y-%m-%d'))
                                       initial=end)
 
-    generate_graphs_button = Button(display_text='Generate New Graphs',
+    generate_graphs_button = Button(display_text='Update Graph',
                                     # name='Generate New Graph',
                                     # attributes={""},
                                     submit=True)
@@ -406,7 +441,20 @@ def usgs(request):
 
 def get_water_ml(request):
 
-    xml_response = render_to_response('gaugeviewwml/waterml.xml')
+    gauge_id = request.GET['gaugeid']
+    start = request.GET['start']
+    end = request.GET['end']
+
+    data = get_usgs_data(gauge_id, start, end)
+    # print data
+    time_series = create_time_series(data)
+    time_series = format_time_series(time_series)
+
+    context = {"gaugeid": gauge_id, "time_series": time_series}
+
+    # xml_response = data
+
+    xml_response = render_to_response('gaugeviewwml/waterml.xml', context)
     xml_response['Content-Type'] = 'application/xml'
     # The following line can be uncommented to cause an XML to be downloaded...
     # xml_response['content-disposition'] = "attachment; filename=output-time-series.xml"
