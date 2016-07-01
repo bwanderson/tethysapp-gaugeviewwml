@@ -4,7 +4,7 @@
     <heading>Reminder</heading>
     <body>This is really cool beans</body>
     {% for tvp in time_series %}
-        <value censorCode="nc" dateTime="{{tvp.date}}" timeOffset="-7" dateTimeUTC="{{tvp.date}}"  methodCode="1"  sourceCode="1"  qualityControlLevelCode="1" >{{tvp.val}}</value>
+        <value censorCode="nc" dateTime="{{tvp.DateTime}}" timeOffset="-7" dateTimeUTC="{{tvp.DateTime}}"  methodCode="1"  sourceCode="1"  qualityControlLevelCode="1" >{{tvp.Value}}</value>
     {% endfor %}
 
 </note>

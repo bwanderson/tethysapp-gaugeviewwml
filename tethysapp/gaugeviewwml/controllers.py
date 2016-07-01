@@ -53,19 +53,47 @@ def get_usgs_data(gauge_id, start, end):
 #     return two_weeks_ago_str
 
 
-def create_time_series(data):
+def usgs_metadata(data):
     """
-    :param data: Tab separated document from NWIS including stream gauge observations
-    :return: Time series list of all streamflow values and datetime objects in the document
+
+    :param data:
+    :return: context includes metadata that can be passed to WaterML document
     """
-    time_series_list = []
+    data = data.splitlines()
+    print data
+    # for line in data.splitlines():
+    #     if line.startswith("# Contact"):
+    #
+    #     if line.startswith("#"):
+
+
+    # context = ({'USGSContact':val[0], 'RetrievedAt':val[1], 'SiteInfo':val, 'DataDescription',val})
+    return data
+
+
+def convert_usgs_to_python(data):
+    """
+    This will convert the entire USGS file to a python object
+    :param data: USGS rdb data file
+    :return:
+    """
+    python_data_list = []
+    metadata = []
+    python_metadata = []
+    contact =  None
+    retrieval_date = None
     for line in data.splitlines():
+        if line.startswith("#"):
+            metadata.append(line)
         if line.startswith("USGS"):
             data_array = line.split('\t')
+            agency_code = data_array[0]
+            site_code = data_array[1]
             time_str = data_array[2]
+            time_zone = data_array[3]
             value_str = data_array[4]
-            if value_str == "Ice":
-                value_str = "0"
+            value_code = data_array[5]
+
             time_str = time_str.replace(" ", "-")
             time_str_array = time_str.split("-")
             year = int(time_str_array[0])
@@ -74,19 +102,47 @@ def create_time_series(data):
             hour, minute = time_str_array[3].split(":")
             hour_int = int(hour)
             minute_int = int(minute)
-            time_series_list.append([datetime(year, month, day, hour_int, minute_int), float(value_str)])
+
+            if value_str == "Ice":
+                value_str = "0"
+
+            python_data_list.append([agency_code, site_code, datetime(year, month, day, hour_int, minute_int),
+                                     time_zone, float(value_str), value_code])
+
+    for i in metadata:
+        i = i[1:].strip()
+        if 'Contact:' in i:
+            contact = i[9:].strip()
+            continue
+        if 'retrieved:' in i:
+            retrieval_date = i[10:35].strip()
+            continue
+    python_metadata.append({'Contact':contact, 'Retrieved':retrieval_date})
+
+    return python_metadata, python_data_list
+
+
+def create_time_series(data):
+    """
+    :param data: Python Data list of USGS NWIS stream gauge observations
+    :return: Time series list of all datetime and values for highcharts plotting
+    """
+    time_series_list = []
+    for i in data:
+        time_series_list.append([i[2], i[4]])
     return time_series_list
 
 
 def format_time_series(data):
     """
     This is to make a format that Django can recognize and use while building the WaterML
-    :param data:
-    :return:
+    :param data: This is a list object containing all USGS observation data returned from NWIS
+    :return: This returns a list that has been formatted to be used as context when passed to the WaterML doc
     """
     good_data = []
     for val in data:
-        good_data.append({'date':val[0], 'val':val[1]})
+        good_data.append({'AgencyCode':val[0], 'SiteCode':val[1], 'DateTime':val[2], 'TimeZone':val[3],
+                          'Value':val[4], 'ValueCode':val[5]})
     return good_data
 
 
@@ -271,6 +327,7 @@ def usgs(request):
     end = request.GET['end']
 
     data = get_usgs_data(gauge_id,start,end)
+    metadata, data = convert_usgs_to_python(data)
     time_series_list = create_time_series(data)
 
     # Check if USGS data exists for time frame
@@ -446,13 +503,10 @@ def get_water_ml(request):
     end = request.GET['end']
 
     data = get_usgs_data(gauge_id, start, end)
-    # print data
-    time_series = create_time_series(data)
-    time_series = format_time_series(time_series)
+    metadata, data = convert_usgs_to_python(data)
+    time_series = format_time_series(data)
 
     context = {"gaugeid": gauge_id, "time_series": time_series}
-
-    # xml_response = data
 
     xml_response = render_to_response('gaugeviewwml/waterml.xml', context)
     xml_response['Content-Type'] = 'application/xml'
