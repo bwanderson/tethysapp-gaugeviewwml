@@ -13,7 +13,9 @@ from tethys_sdk.gizmos import SelectInput
 @login_required()
 def home(request):
     """
-    Controller for the app home page.
+    This is the controller for the app homepage
+    :param request: This is the request from the URL map in app.py
+    :return: This will render the html page
     """
     context = {}
 
@@ -30,6 +32,12 @@ def home(request):
 
 
 def get_usgs_data(gauge_id, start, end):
+    """
+    :param gauge_id: This is the USGS Id of the gauge
+    :param start: This is the properly formatted beginning date YYYY-MM-DD
+    :param end: This is the properly formatted end date YYYY-MM-DD
+    :return: This returns a USGS rdb file of streamflow in cfs for the selected gauge and time
+    """
     url = ('http://nwis.waterdata.usgs.gov/usa/nwis/uv/?cb_00060=on&format=rdb&site_no={0}'
            '&period=&begin_date={1}&end_date={2}'.format(gauge_id, start, end))
     response = urllib2.urlopen(url)
@@ -53,24 +61,6 @@ def get_usgs_data(gauge_id, start, end):
 #     return two_weeks_ago_str
 
 
-def usgs_metadata(data):
-    """
-
-    :param data:
-    :return: context includes metadata that can be passed to WaterML document
-    """
-    data = data.splitlines()
-    print data
-    # for line in data.splitlines():
-    #     if line.startswith("# Contact"):
-    #
-    #     if line.startswith("#"):
-
-
-    # context = ({'USGSContact':val[0], 'RetrievedAt':val[1], 'SiteInfo':val, 'DataDescription',val})
-    return data
-
-
 def convert_usgs_to_python(data):
     """
     This will convert the entire USGS file to a python object
@@ -80,7 +70,7 @@ def convert_usgs_to_python(data):
     python_data_list = []
     metadata = []
     python_metadata = []
-    contact =  None
+    contact = None
     retrieval_date = None
     for line in data.splitlines():
         if line.startswith("#"):
@@ -117,7 +107,7 @@ def convert_usgs_to_python(data):
         if 'retrieved:' in i:
             retrieval_date = i[10:35].strip()
             continue
-    python_metadata.append({'Contact':contact, 'Retrieved':retrieval_date})
+    python_metadata.append({'Contact': contact, 'Retrieved': retrieval_date})
 
     return python_metadata, python_data_list
 
@@ -141,8 +131,8 @@ def format_time_series(data):
     """
     good_data = []
     for val in data:
-        good_data.append({'AgencyCode':val[0], 'SiteCode':val[1], 'DateTime':val[2], 'TimeZone':val[3],
-                          'Value':val[4], 'ValueCode':val[5]})
+        good_data.append({'AgencyCode': val[0], 'SiteCode': val[1], 'DateTime': val[2], 'TimeZone': val[3],
+                          'Value': val[4], 'ValueCode': val[5]})
     return good_data
 
 
@@ -183,7 +173,7 @@ def ahps(request):
                     # print field.get('name')
                     if field.get('name') == "Flow":
                         if field.get('units') == "kcfs":
-                            value = float(field.text)*1000
+                            value = float(field.text) * 1000
                             # print value
                             total += value
                         if field.get('units') == "cfs":
@@ -207,7 +197,7 @@ def ahps(request):
                 for field in datum:
                     if field.get('name') == "Flow":
                         if field.get('units') == "kcfs":
-                            value = float(field.text)*1000
+                            value = float(field.text) * 1000
 
                         if field.get('units') == "cfs":
                             value = float(field.text)
@@ -234,16 +224,16 @@ def ahps(request):
 
     # Plot AHPS flow data
     timeseries_plot = TimeSeries(
-            height='500px',
-            width='500px',
-            engine='highcharts',
-            title='Streamflow Plot',
-            y_axis_title='Flow',
-            y_axis_units='cfs',
-            series=[{
-                'name': 'Streamflow',
-                'data': display_data
-            }]
+        height='500px',
+        width='500px',
+        engine='highcharts',
+        title='Streamflow Plot',
+        y_axis_title='Flow',
+        y_axis_units='cfs',
+        series=[{
+            'name': 'Streamflow',
+            'data': display_data
+        }]
     )
 
     # Gets stage data in a list
@@ -281,16 +271,16 @@ def ahps(request):
 
     # Plot AHPS stage data
     timeseries_plot_stage = TimeSeries(
-            height='500px',
-            width='500px',
-            engine='highcharts',
-            title='Stage Plot',
-            y_axis_title='Stage',
-            y_axis_units='ft',
-            series=[{
-                'name': 'Stage',
-                'data': observed_stage_data
-            }]
+        height='500px',
+        width='500px',
+        engine='highcharts',
+        title='Stage Plot',
+        y_axis_title='Stage',
+        y_axis_units='ft',
+        series=[{
+            'name': 'Stage',
+            'data': observed_stage_data
+        }]
     )
 
     context = ({"gaugeno": gauge_id, "waterbody": waterbody, "timeseries_plot": timeseries_plot, "gotdata": gotdata,
@@ -326,7 +316,7 @@ def usgs(request):
     start = request.GET['start']
     end = request.GET['end']
 
-    data = get_usgs_data(gauge_id,start,end)
+    data = get_usgs_data(gauge_id, start, end)
     metadata, data = convert_usgs_to_python(data)
     time_series_list = create_time_series(data)
 
@@ -503,10 +493,14 @@ def get_water_ml(request):
     end = request.GET['end']
 
     data = get_usgs_data(gauge_id, start, end)
+    print data
     metadata, data = convert_usgs_to_python(data)
+    print metadata
+    print data
     time_series = format_time_series(data)
+    print time_series
 
-    context = {"gaugeid": gauge_id, "time_series": time_series}
+    context = {"gaugeid": gauge_id, "metadata": metadata, "time_series": time_series}
 
     xml_response = render_to_response('gaugeviewwml/waterml.xml', context)
     xml_response['Content-Type'] = 'application/xml'
