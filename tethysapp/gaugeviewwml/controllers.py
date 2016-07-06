@@ -61,6 +61,48 @@ def get_usgs_data(gauge_id, start, end):
 #     return two_weeks_ago_str
 
 
+def convert_to_utc(time, tz):
+    """
+    :param time: this is a python datetime object
+    :param tz: this is the stated timezone for the object
+    :return: This will return the UTC (GMT) time of the observation
+    """
+    tz = tz.upper()
+
+    if tz == "EGST" or tz == "GMT":
+        time_change = timedelta(hours=0)
+    elif tz == "EGT":
+        time_change = timedelta(hours=1)
+    elif tz == "PMDT" or tz == "WGST":
+        time_change = timedelta(hours=2)
+    elif tz == "NDT" or tz == "HAT":
+        time_change = timedelta(hours=2.5)
+    elif tz == "ADT" or tz == "HAA" or tz == "PMST" or tz == "WGT" or tz == "AT":
+        time_change = timedelta(hours=3)
+    elif tz == "NST" or tz == "HNT":
+        time_change = timedelta(hours=3.5)
+    elif tz == "AST" or tz == "HNA" or tz == "EDT" or tz == "HAE"  or tz == "ET":
+        time_change = timedelta(hours=4)
+    elif tz == "CDT" or tz == "EST" or tz == "CT" or tz == "HAC" or tz == "HNE":
+        time_change = timedelta(hours=5)
+    elif tz == "CST" or tz == "MDT" or tz == "MT" or tz == "HNC" or tz == "HAR":
+        time_change = timedelta(hours=6)
+    elif tz == "MST" or tz == "PDT" or tz == "PT" or tz == "HNR" or tz == "HAP":
+        time_change = timedelta(hours=7)
+    elif tz == "AKDT" or tz == "PST" or tz == "HNP":
+        time_change = timedelta(hours=8)
+    elif tz == "AKST" or tz == "HADT":
+        time_change = timedelta(hours=9)
+    elif tz == "HAST":
+        time_change = timedelta(hours=10)
+    else:
+        time_change = timedelta(hours=0)
+
+    utc_time = time + time_change
+    time_offset = 0 - time_change.seconds / (60 * 60)
+    return utc_time, time_offset
+
+
 def convert_usgs_to_python(data):
     """
     This will convert the entire USGS file to a python object
@@ -92,12 +134,13 @@ def convert_usgs_to_python(data):
             hour, minute = time_str_array[3].split(":")
             hour_int = int(hour)
             minute_int = int(minute)
+            time = datetime(year, month, day, hour_int, minute_int)
+            utctime, time_offset = convert_to_utc(time, time_zone)
 
             if value_str == "Ice":
                 value_str = "0"
 
-            python_data_list.append([agency_code, site_code, datetime(year, month, day, hour_int, minute_int),
-                                     time_zone, float(value_str), value_code])
+            python_data_list.append([agency_code, site_code, time, time_offset, utctime, float(value_str), value_code])
 
     for i in metadata:
         i = i[1:].strip()
@@ -119,7 +162,7 @@ def create_time_series(data):
     """
     time_series_list = []
     for i in data:
-        time_series_list.append([i[2], i[4]])
+        time_series_list.append([i[2], i[5]])
     return time_series_list
 
 
@@ -131,8 +174,8 @@ def format_time_series(data):
     """
     good_data = []
     for val in data:
-        good_data.append({'AgencyCode': val[0], 'SiteCode': val[1], 'DateTime': val[2], 'TimeZone': val[3],
-                          'Value': val[4], 'ValueCode': val[5]})
+        good_data.append({'AgencyCode': val[0], 'SiteCode': val[1], 'DateTime': val[2], 'TimeOffset': val[3],
+                          'UTCTime': val[4], 'Value': val[5], 'ValueCode': val[6]})
     return good_data
 
 
@@ -493,10 +536,10 @@ def get_water_ml(request):
     end = request.GET['end']
 
     data = get_usgs_data(gauge_id, start, end)
-    print data
+    # print data
     metadata, data = convert_usgs_to_python(data)
-    print metadata
-    print data
+    # print metadata
+    # print data
     time_series = format_time_series(data)
     print time_series
 
