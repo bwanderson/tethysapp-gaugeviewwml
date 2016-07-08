@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<timeSeriesResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.cuahsi.org/waterML/1.1/">
+	<queryInfo><creationTime>2015-04-17T11:04:51-06:00</creationTime><criteria MethodCalled="GetValues"><parameter name="site" value="user defined" /><parameter name="variable" value="MODIS:SCA" /></criteria></queryInfo>
+	<timeSeries>
+		<sourceInfo xsi:type="SiteInfoType"><siteName>"{{metadata.1.SiteName}}"</siteName><siteCode network="NWIS">{{metadata.1.SiteName}}</siteCode><elevation_m>0</elevation_m><verticalDatum>Unknown</verticalDatum></sourceInfo>
+		<variable><variableCode vocabulary="NWIS" default="true" variableID="00060" >00060</variableCode><variableName>Discharge</variableName><valueType>Measured Value</valueType><dataType>Continuous</dataType><generalCategory></generalCategory><sampleMedium>Water</sampleMedium><unit><unitName>cfs</unitName><unitType>Discharge</unitType><unitAbbreviation>cfs</unitAbbreviation><unitCode>1</unitCode></unit><noDataValue>-9999</noDataValue><timeScale isRegular="true"><unit><unitName>minutes</unitName><unitType>Time</unitType><unitAbbreviation>m</unitAbbreviation><unitCode>104</unitCode></unit><timeSupport>0</timeSupport></timeScale><speciation>Not applicable</speciation></variable>
+
+		<values>
+        {% for tvp in time_series %}
+			<value censorCode="nc" dateTime="{{tvp.DateTime}}" timeOffset="{{tvp.TimeOffset}}" dateTimeUTC="{{tvp.UTCTime}}"  methodCode="1"  sourceCode="1"  qualityControlLevelCode="1" >{{tvp.ValueCode}}</value>
+	    {% endfor %}
+		<qualityControlLevel qualityControlLevelID="1"><qualityControlLevelCode>1</qualityControlLevelCode><definition>Raw data</definition><explanation>The data was not quality controlled. Errors may exist in the data.</explanation></qualityControlLevel><method methodID="1"><methodCode>1</methodCode><methodDescription>The original data is based on the USGS NWIS data download. It was extracted by the GaugeViewWML application from the USGS NWIS Waterdata web service.</methodDescription><methodLink></methodLink></method><source sourceID="1"><sourceCode>1</sourceCode><organization>USGS</organization><sourceDescription>USGS and BYU</sourceDescription><contactInformation><contactName>Bryce Anderson</contactName><typeOfContact>main</typeOfContact><email>bwanderson@users.noreply.github.com</email><phone></phone><address xsi:type="xsd:string">Clyde Building, Provo, Utah, 84604</address></contactInformation><sourceLink>http://tethys.byu.edu/apps/gaugeviewwml</sourceLink><citation>USGS NWIS discharge data extracted using the GaugeViewWML application from the USGS NWIS web service. Data source: http://nwis.waterdata.usgs.gov/usa/nwis/uv/</citation></source><censorCode><censorCode>nc</censorCode><censorCodeDescription>not censored</censorCodeDescription></censorCode></values></timeSeries></timeSeriesResponse>
+
+
+        <!--THIS DOCUMENT HAS NOT BEEN Verified FOR THE USGS GAUGEVIEWER APP-->

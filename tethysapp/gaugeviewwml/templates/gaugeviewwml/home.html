@@ -2,6 +2,77 @@
 {% load tethys_gizmos %}
 {% load staticfiles %}
 
+{% block app_content_wrapper_override %}
+<!-- Modal  -->
+<style>
+  #desc {
+    color: black;
+    font-size:12pt;
+    margin-left:10px;
+  }
+  .sub {
+    font-size:12pt;
+  }
+  .modalNote {
+    color: gray;
+    margin-left:10px;
+  }
+  .modalList {
+    margin:10px;
+    font-size:16pt;
+  }
+</style>
+<div class="modal fade" id="welcome-popup" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Gauge Viewer + WaterML Help Guide</h4>
+      </div>
+      <div class="modal-body">
+        <div id="welcome-info">
+          <div class="line">
+            <p id="desc">This application helps find and download available information from USGS stream gauges and
+                AHPS forecasts. Follow the steps below to successfully find available data.</p>
+          </div>
+          <ol>
+          <li class="modalList">Zoom to location</li>
+          <span class="sub">USGS Gauges are present in all states, except Alaska, and Puerto Rico. <br>
+              AHPS forecasts are available in every state and Puerto Rico</span>
+          <li class="modalList">Select gauge of interest</li>
+          <span class="sub">USGS gauges are blue, while AHPS forecast points are red. Each layer can be turned off
+              using the checkbox to the left.</span>
+          <li class="modalList">Select "View Data" for Gauge of interest</li>
+          <span class="sub">"View data" opens information regarding the gauge or forecast point in a new tab.<br>
+              "Visit Website" leaves the app to the official USGS or NOAA website with further information</span>
+          <li class="modalList">Input dates of interest</li>
+          <span class="sub">Input dates of interest for selected gauge on the left sidebar. Dates MUST be formatted
+              YYYY-MM-DD </span>
+          <li class="modalList">Update Graph</li>
+          <span class="sub">After clicking the "Update Graph" button new data will be loaded and displayed. Further
+              options are available by selecting buttons along the bottom of the screen</span>
+          </ol>
+          <div class="modalNote">
+            <span>
+              Note: Date formats MUST be YYYY-MM-DD.
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div id="byu-logo-container">
+          <span><i>Developed at the BYU Environmental Research Modelling Lab</i></span>
+          <img src="{% static 'gaugeviewwml/images/byu-logo.png' %}"/>
+        </div>
+        <button type="button" class="btn btn-default" id="close-popup" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End Modal -->
+{{block.super}}
+{% endblock %}
+
 {% block app_content %}
     <script src="{% static 'gaugeviewwml/css/ol.css' %}" type="text/css"></script>
 
@@ -28,6 +99,7 @@
 {% endblock %}
 
 {% block app_navigation_items %}
+
 <div align = "center">
   <!--<li class="title">Layers to Display</li>-->
     <p style="font-size:200%;">Layers to Display</p>
@@ -36,5 +108,8 @@
     <br>
     <input type="checkbox" onClick="USGS_Gauges.setVisible(!USGS_Gauges.getVisible());"
              id="ch_USGS_Gauges" name="USGS_Gauges" checked>USGS Gauges (Blue)
+    <br><br><br>
+    <button id="instructions" type="button" class="btn btn-default" data-toggle="modal" data-target="#welcome-popup" >
+    Instructions</button>
 </div>
 {% endblock %}

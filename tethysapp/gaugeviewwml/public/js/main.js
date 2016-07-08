@@ -1,3 +1,8 @@
+//loads modal on page load
+$(document).ready(function () {
+    $("#welcome-popup").modal("show");
+});
+
 function dataCall(inputURL) {
     var result = null;
         $.ajax({

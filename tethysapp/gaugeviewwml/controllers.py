@@ -1,5 +1,6 @@
 from django.shortcuts import render, render_to_response
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
 from datetime import datetime, timedelta
 import urllib2
 from tethys_sdk.gizmos import TimeSeries
@@ -45,6 +46,33 @@ def get_usgs_data(gauge_id, start, end):
     return data
 
 
+def get_usgs_xml(gauge_id, start, end):
+    """
+    The URL generated here is described at: http://waterservices.usgs.gov/rest/IV-Test-Tool.html and can be edited
+    for a WML 2.0 format, as well as others.
+    :param gauge_id: This is the USGS Id of the gauge
+    :param start: This is the properly formatted beginning date YYYY-MM-DD
+    :param end: This is the properly formatted end date YYYY-MM-DD
+    :return: This returns a USGS rdb file of streamflow in cfs for the selected gauge and time
+    """
+    url = ('http://nwis.waterservices.usgs.gov/nwis/iv/?format=waterml,1.1&sites={0}&startDT={1}&endDT={2}&'
+           'parameterCd=00060'.format(gauge_id, start, end))
+    response = urllib2.urlopen(url)
+    data = response.read()
+    return data
+
+
+def get_ahps_data(gaugeno):
+    """
+    :param gaugeno: This is the AHPS Gauge Number that was selected
+    :return: This returns an .xml file with the required gauge information, streamflow and stage, as applicable
+    """
+    url = 'http://water.weather.gov/ahps2/hydrograph_to_xml.php?gage={0}&output=xml'.format(gaugeno.lower())
+    response = urllib2.urlopen(url)
+    data = response.read()
+    return data
+
+
 #  The following two functions determine the current and two weeks past date, and may not end up being used at all.
 # def current_date():
 #     t_now = datetime.now()
@@ -65,7 +93,7 @@ def convert_to_utc(time, tz):
     """
     :param time: this is a python datetime object
     :param tz: this is the stated timezone for the object
-    :return: This will return the UTC (GMT) time of the observation
+    :return: This will return the UTC (GMT) time of the observation, and the numerical time offset
     """
     tz = tz.upper()
 
@@ -81,7 +109,7 @@ def convert_to_utc(time, tz):
         time_change = timedelta(hours=3)
     elif tz == "NST" or tz == "HNT":
         time_change = timedelta(hours=3.5)
-    elif tz == "AST" or tz == "HNA" or tz == "EDT" or tz == "HAE"  or tz == "ET":
+    elif tz == "AST" or tz == "HNA" or tz == "EDT" or tz == "HAE" or tz == "ET":
         time_change = timedelta(hours=4)
     elif tz == "CDT" or tz == "EST" or tz == "CT" or tz == "HAC" or tz == "HNE":
         time_change = timedelta(hours=5)
@@ -155,7 +183,7 @@ def convert_usgs_to_python(data):
     return python_metadata, python_data_list
 
 
-def create_time_series(data):
+def create_time_series_usgs(data):
     """
     :param data: Python Data list of USGS NWIS stream gauge observations
     :return: Time series list of all datetime and values for highcharts plotting
@@ -166,17 +194,18 @@ def create_time_series(data):
     return time_series_list
 
 
-def format_time_series(data):
-    """
-    This is to make a format that Django can recognize and use while building the WaterML
-    :param data: This is a list object containing all USGS observation data returned from NWIS
-    :return: This returns a list that has been formatted to be used as context when passed to the WaterML doc
-    """
-    good_data = []
-    for val in data:
-        good_data.append({'AgencyCode': val[0], 'SiteCode': val[1], 'DateTime': val[2], 'TimeOffset': val[3],
-                          'UTCTime': val[4], 'Value': val[5], 'ValueCode': val[6]})
-    return good_data
+# This function was a previous helper function in creating WML 1.1 documents
+# def format_time_series_usgs(data):
+#     """
+#     This is to make a format that Django can recognize and use while building the WaterML
+#     :param data: This is a list object containing all USGS observation data returned from NWIS
+#     :return: This returns a list that has been formatted to be used as context when passed to the WaterML doc
+#     """
+#     good_data = []
+#     for val in data:
+#         good_data.append({'AgencyCode': val[0], 'SiteCode': val[1], 'DateTime': val[2], 'TimeOffset': val[3],
+#                           'UTCTime': val[4], 'Value': val[5], 'ValueCode': val[6]})
+#     return good_data
 
 
 def ahps(request):
@@ -186,10 +215,8 @@ def ahps(request):
     gauge_id = request.GET['gaugeno']
     waterbody = request.GET['waterbody']
 
-    # URL for getting AHPS data
-    url = 'http://water.weather.gov/ahps2/hydrograph_to_xml.php?gage={0}&output=xml'.format(gauge_id.lower())
-    response = urllib2.urlopen(url)
-    data = response.read()
+    # Get AHPS data using a dedicated function
+    data = get_ahps_data(gauge_id)
 
     # Create AHPS list
     display_data = []  # Creates an empty list to contain data for later display
@@ -361,7 +388,7 @@ def usgs(request):
 
     data = get_usgs_data(gauge_id, start, end)
     metadata, data = convert_usgs_to_python(data)
-    time_series_list = create_time_series(data)
+    time_series_list = create_time_series_usgs(data)
 
     # Check if USGS data exists for time frame
     gotdata = False
@@ -535,19 +562,21 @@ def get_water_ml(request):
     start = request.GET['start']
     end = request.GET['end']
 
-    data = get_usgs_data(gauge_id, start, end)
-    # print data
-    metadata, data = convert_usgs_to_python(data)
-    # print metadata
-    # print data
-    time_series = format_time_series(data)
-    print time_series
+    # data = get_usgs_data(gauge_id, start, end)
+    # metadata, data = convert_usgs_to_python(data)
+    # metadata.append({'SiteName': sitename})
+    # time_series = format_time_series_usgs(data)
 
-    context = {"gaugeid": gauge_id, "metadata": metadata, "time_series": time_series}
+    # context = {"gaugeid": gauge_id, "metadata": metadata, "time_series": time_series}
 
-    xml_response = render_to_response('gaugeviewwml/waterml.xml', context)
-    xml_response['Content-Type'] = 'application/xml'
+    # xml_response = render_to_response('gaugeviewwml/usgswaterml.xml', context)
+    # xml_response['Content-Type'] = 'application/xml'
     # The following line can be uncommented to cause an XML to be downloaded...
     # xml_response['content-disposition'] = "attachment; filename=output-time-series.xml"
+
+    # Use the USGS IV Web Services Rest endpoint to download the proper xml document
+    data = get_usgs_xml(gauge_id, start, end)
+    xml_response = HttpResponse(data, content_type='text/xml')
+    xml_response['Content-Disposition'] = "attachment; filename=output-time-series.xml"
 
     return xml_response
