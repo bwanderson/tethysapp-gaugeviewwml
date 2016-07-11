@@ -275,6 +275,8 @@ def ahps(request):
     # Get values for gauge_id and waterbody
     gauge_id = request.GET['gaugeno']
     waterbody = request.GET['waterbody']
+    lat = request.GET['lat']
+    long = request.GET['long']
 
     # Get AHPS data using a dedicated function
     data = get_ahps_data(gauge_id) # data will be in a string, but is an xml document
@@ -332,7 +334,7 @@ def ahps(request):
     )
 
     context = ({"gaugeno": gauge_id, "waterbody": waterbody, "timeseries_plot": timeseries_plot, "gotdata_flow": gotdata_flow,
-                "timeseries_plot_stage": timeseries_plot_stage, "gotdata_stage": gotdata_stage})
+                "timeseries_plot_stage": timeseries_plot_stage, "gotdata_stage": gotdata_stage, "lat": lat, "long": long})
 
     return render(request, 'gaugeviewwml/ahps.html', context)
 
@@ -553,6 +555,8 @@ def get_water_ml(request):
 
     elif type == 'ahps':
         gauge_id = request.GET['gaugeid']
+        lat = request.GET['lat']
+        long = request.GET['long']
 
         data = get_ahps_data(gauge_id)
         time_series = convert_ahps_to_python(data)
@@ -564,7 +568,7 @@ def get_water_ml(request):
         name = site.get('name')
         request_time = site.get('generationtime')
 
-        metadata = [gauge_id, name, request_time]
+        metadata = [gauge_id, name, request_time, lat, long]
 
         context = {"gaugeid": gauge_id, "metadata": metadata, "time_series": time_series}
 

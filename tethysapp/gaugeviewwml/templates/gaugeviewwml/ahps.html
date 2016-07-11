@@ -4,7 +4,6 @@
 
 {% block app_navigation_items %}
   <li><a href="{% url 'gaugeviewwml:home' %}">Return to Map</a></li>
-  <!--<li><a href="http://localhost:8000/apps/gaugeviewwml/usgs/">Test POST Data</a></li>-->
     <center>
         <button id="instructions" type="button" class="btn btn-default" data-toggle="modal" data-target="#ahps-popup" >
         Instructions</button>
@@ -57,7 +56,7 @@
       </div>
       <div class="modal-footer">
         <div id="byu-logo-container">
-          <span><i>Developed at the BYU Environmental Research Modelling Lab</i></span>
+          <span><i>Developed at the BYU Hydroinformatics Lab</i></span>
           <img src="{% static 'gaugeviewwml/images/byu-logo.png' %}"/>
         </div>
         <button type="button" class="btn btn-default" id="close-popup" data-dismiss="modal">Close</button>
@@ -99,10 +98,10 @@
 {% block app_actions %}
 
 <a id="CUASHI_tsv-link" target="_blank" href="https://appsdev.hydroshare.org/timeseries-viewer/?src=xmlrest&res_id=
-http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dahps%26gaugeid%3D{{gaugeno}}"
+http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dahps%26gaugeid%3D{{gaugeno}}%26lat%3D{{lat}}%26long%3D{{long}}"
    class="btn btn-default">Launch with CUASHI Time Series Viewer</a>
 
-<a id="waterml-link" target="_blank" href="/apps/gaugeviewwml/waterml/?type=ahps&gaugeid={{gaugeno}}"
+<a id="waterml-link" target="_blank" href="/apps/gaugeviewwml/waterml/?type=ahps&gaugeid={{gaugeno}}&lat={{lat}}&long={{long}}"
    class="btn btn-default">Get WaterML</a>
 
 {% endblock %}

@@ -141,7 +141,9 @@ map.on('singleclick', function(evt) {
                     var gaugeID = AHPS_Data.documentElement.children[i].attributes['GaugeLID'].value;
                     var waterbody = AHPS_Data.documentElement.children[i].attributes['Waterbody'].value;
                     var urlLink = AHPS_Data.documentElement.children[i].attributes['URL'].value;
-                    var ahpshtml = "/apps/gaugeviewwml/ahps/?gaugeno=" + gaugeID +"&waterbody=" + waterbody;
+                    var lat = AHPS_Data.documentElement.children[i].attributes['Latitude'].value;
+                    var long = AHPS_Data.documentElement.children[i].attributes['Longitude'].value;
+                    var ahpshtml = "/apps/gaugeviewwml/ahps/?gaugeno=" + gaugeID +"&waterbody=" + waterbody + "&lat=" + lat + "&long=" + long;
                     displayContent += '<tr><td>AHPS:\n'+gaugeID +'</td><td>'+ waterbody + '</td><td><a href="'+ahpshtml+'" target="_blank">View Data</a></td><td><a href="'+urlLink+'" target="_blank">Go to Website</a></td></tr>';
                     }
                 };
