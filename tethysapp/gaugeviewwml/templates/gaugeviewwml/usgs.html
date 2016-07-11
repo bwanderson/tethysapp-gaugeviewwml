@@ -22,8 +22,73 @@
     <!--{% gizmo date_picker forecast_date_picker %}-->
     <!--{% gizmo date_picker forecast_date_end_picker %}-->
     <!--{% gizmo select_input forecast_time_select %}-->
-    <center>{% gizmo button generate_graphs_button %}</center>
+    <center>{% gizmo button generate_graphs_button %}<br><br><br>
+
+    <button id="instructions" type="button" class="btn btn-default" data-toggle="modal" data-target="#usgs-popup" >
+    Instructions</button></center>
 </form>
+{% endblock %}
+
+{% block app_content_wrapper_override %}
+<!-- Modal  -->
+<style>
+  #desc {
+    color: black;
+    font-size:12pt;
+    margin-left:10px;
+  }
+  .sub {
+    font-size:12pt;
+  }
+  .modalNote {
+    color: gray;
+    margin-left:10px;
+  }
+  .modalList {
+    margin:10px;
+    font-size:16pt;
+    font-variant: small-caps;
+  }
+</style>
+<div class="modal fade" id="usgs-popup" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Gauge Viewer + WaterML Help Guide</h4>
+      </div>
+      <div class="modal-body">
+        <div id="usgs-info">
+          <div class="line">
+            <p id="desc">This page displays available data from the USGS for the selected gauge.</p>
+          </div>
+          <ol>
+          <li class="modalList">Input dates of interest</li>
+          <span class="sub">Input dates of interest for selected gauge on the left sidebar. Dates MUST be formatted
+              YYYY-MM-DD (i.e. 2016-05-21) </span>
+          <li class="modalList">Update Graph</li>
+          <span class="sub">After clicking the "Update Graph" button new data will be loaded and displayed. Further
+              options are available by selecting buttons along the bottom of the screen</span>
+          </ol>
+          <div class="modalNote">
+            <span>
+              Note: Date formats MUST be YYYY-MM-DD (i.e. 2016-05-21).
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div id="byu-logo-container">
+          <span><i>Developed at the BYU Environmental Research Modelling Lab</i></span>
+          <img src="{% static 'gaugeviewwml/images/byu-logo.png' %}"/>
+        </div>
+        <button type="button" class="btn btn-default" id="close-popup" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End Modal -->
+{{block.super}}
 {% endblock %}
 
 {% block app_content %}
@@ -67,12 +132,12 @@
 <!--<a id="waterml-link" target="_blank" href="/apps/gaugeviewwml/waterml/?gaugeid={{gaugeid}}&start={{start}}&end={{end}}"-->
    <!--class="btn btn-default">Register in Hydroshare</a>-->
 
-<a id="waterml-link" target="_blank" href="https://appsdev.hydroshare.org/timeseries-viewer/?src=xmlrest&res_id=
-http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Fgaugeid%3D{{gaugeid}}%26start%3D{{start}}
+<a id="CUASHI_tsv-link" target="_blank" href="https://appsdev.hydroshare.org/timeseries-viewer/?src=xmlrest&res_id=
+http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dusgs%26gaugeid%3D{{gaugeid}}%26start%3D{{start}}
 %26end%3D{{end}}" class="btn btn-default">Launch with CUASHI Time Series Viewer</a>
 
-<a id="waterml-link" target="_blank" href="/apps/gaugeviewwml/waterml/?gaugeid={{gaugeid}}&start={{start}}&end={{end}}"
-   class="btn btn-default">Get WaterML</a>
+<a id="waterml-link" target="_blank" href="/apps/gaugeviewwml/waterml/?type=usgs&gaugeid={{gaugeid}}&start={{start}}
+&end={{end}}" class="btn btn-default">Get WaterML</a>
 <!--<a id="waterml-link" target="_blank" href="/apps/gaugeviewwml/waterml" class="btn btn-default">Get WaterML</a>-->
 
 {% endblock %}

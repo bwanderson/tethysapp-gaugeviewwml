@@ -21,8 +21,13 @@ var projection = ol.proj.get('EPSG:3857');
 //Define Basemap
 //Here we are declaring the raster layer as a separate object to put in the map later
 var baseLayer = new ol.layer.Tile({
-    source: new ol.source.MapQuest({layer: 'osm'})
+    source: new ol.source.OSM({})
 });
+
+// as of July 11, 2016 Mapquest is no longer accessible See: goo.gl/xB0xXt
+//var baseLayer = new ol.layer.Tile({
+//    source: new ol.source.MapQuest({layer: 'osm'})
+//});
 
 
 //Define all WMS Sources:
@@ -130,16 +135,6 @@ map.on('singleclick', function(evt) {
             if (AHPS_url) {
                 var AHPS_Data = dataCall(AHPS_url);
                 var AHPS_Count = AHPS_Data.documentElement.childElementCount;
-//                var USGS_Data = dataCall(USGS_url);
-//                var USGS_Count = USGS_Data.documentElement.childElementCount;
-//
-//                console.log(AHPS_url);
-//                console.log(USGS_url);
-//
-//                console.log(AHPS_Data);
-//                console.log(AHPS_Count);
-//                console.log(USGS_Data);
-//                console.log(USGS_Count);
 
                 //This is for AHPS Gauges
                 for (i = 0; i < AHPS_Count; i++) {
@@ -149,39 +144,16 @@ map.on('singleclick', function(evt) {
                     var ahpshtml = "/apps/gaugeviewwml/ahps/?gaugeno=" + gaugeID +"&waterbody=" + waterbody;
                     displayContent += '<tr><td>AHPS:\n'+gaugeID +'</td><td>'+ waterbody + '</td><td><a href="'+ahpshtml+'" target="_blank">View Data</a></td><td><a href="'+urlLink+'" target="_blank">Go to Website</a></td></tr>';
                     }
-
-//                //This is for USGS Gauges
-//                for (i = 0; i < USGS_Count; i++) {
-//                    var gaugeID = USGS_Data.documentElement.children[i].attributes['SITE_NO'].value;
-//                    var waterbody = USGS_Data.documentElement.children[i].attributes['STATION_NM'].value;
-//                    var urlLink = USGS_Data.documentElement.children[i].attributes['NWISWEB'].value;
-//                    displayContent += '<tr><td>USGS:\n'+gaugeID +'</td><td>'+ waterbody + '</td><td><a href="'+urlLink+'" target="_blank">Go to Website</a></td></tr>';
-//                    }
-//
-//                    displayContent += '</table>';
-//
-//                $(element).popover({
-//                'placement': 'top',
-//                'html': true,
-//                'content': displayContent
-//                  });
-//                $(element).popover('show');
                 };
 
             if (USGS_url) {
                 var USGS_Data = dataCall(USGS_url);
                 var USGS_Count = USGS_Data.documentElement.childElementCount;
 
-//                console.log(USGS_url);
-//                console.log(USGS_Data);
-//                console.log(USGS_Count);
-
-//find two weeks ago date
-
+                //find two weeks ago date
                 var date_old = new Date();
 
                 //document.write(date_old.toLocaleString());
-
                 date_old.setDate(date_old.getDate() - 14);
 
                 //document.write(date_old.toLocaleString());
@@ -199,7 +171,6 @@ map.on('singleclick', function(evt) {
                     displayContent += '<tr><td>USGS:\n'+gaugeID +'</td><td>'+ waterbody + '</td><td><a href="'+usgshtml+'" target="_blank">View Data</a></td><td><a href="'+urlLink+'" target="_blank">Go to Website</a></td></tr>';
                     }
                 };
-
                     displayContent += '</table>';
 
                 $(element).popover({

@@ -183,6 +183,63 @@ def convert_usgs_to_python(data):
     return python_metadata, python_data_list
 
 
+def convert_ahps_to_python(data):
+    """
+    :param data: Input the XML file returned from the AHPS website
+    :return: return a Python list object with time-series data from the XML returned. The python list returned will be
+    formatted as: [(observed or forecast), datetime, stage, stage units, flow, flow_units]
+    """
+    site = ElTree.fromstring(data)
+    python_data = []
+
+    for child in site:
+        if child.tag == "observed" or child.tag == "forecast":
+            for datum in child:
+                for field in datum:
+                    if field.get('timezone') == "UTC":
+                        time = field.text
+                        time1 = time.replace("T", "-")
+                        time_split = time1.split("-")
+                        year = int(time_split[0])
+                        month = int(time_split[1])
+                        day = int(time_split[2])
+                        hour_minute = time_split[3].split(":")
+                        hour = int(hour_minute[0])
+                        minute = int(hour_minute[1])
+                    elif field.get('name') == "Stage":
+                        stage = float(field.text)
+                        stage_units = field.get('units')
+                    elif field.get('name') == "Flow":
+                        if field.get('units') == "kcfs":
+                            flow = float(field.text) * 1000
+                            flow_units = 'cfs'
+                            # total += flow
+                        elif field.get('units') == "cfs":
+                            flow = float(field.text)
+                            flow_units = 'cfs'
+                            # total += flow
+                        else:
+                            flow = float(field.text)
+                            flow_units = field.get('units')
+                python_data.append([child.tag, datetime(year, month, day, hour, minute), stage, stage_units, flow,
+                                    flow_units])
+
+        # Input XML requires sorting by date to get in proper order
+        python_data.sort(key=lambda x: x[1])
+
+    return python_data
+
+
+def get_ahps_metadata(data):
+    """
+    :param data: XML string from AHPS web service
+    :return: listed metadata
+    """
+    site = ElTree.fromstring(data)
+    metadata = []
+    site_name = site.name
+
+
 def create_time_series_usgs(data):
     """
     :param data: Python Data list of USGS NWIS stream gauge observations
@@ -209,88 +266,37 @@ def create_time_series_usgs(data):
 
 
 def ahps(request):
-    # Controller for the app ahps page.
+    """
+    Controller for the AHPS.html page
+    :param request: URL request for the page, including GET information
+    :return: Returns a rendering of the page with AHPS data available displayed
+    """
 
     # Get values for gauge_id and waterbody
     gauge_id = request.GET['gaugeno']
     waterbody = request.GET['waterbody']
 
     # Get AHPS data using a dedicated function
-    data = get_ahps_data(gauge_id)
+    data = get_ahps_data(gauge_id) # data will be in a string, but is an xml document
 
-    # Create AHPS list
-    display_data = []  # Creates an empty list to contain data for later display
-    value = float()
-    total = float()
-    site = ElTree.fromstring(data)
-    # print site.tag
+    # Convert AHPS stage and flow data to a usable string format (NOT INCLUDING METADATA)
+    python_data = convert_ahps_to_python(data)
 
-    # The following sections parse returned XML data to find observed and forecast information for display.
-    # The XML data can be viewed by uncommenting the print url line and copying the url into a browser.
-    for child in site:
-        if child.tag == "observed":
-            observed = child  # This is to add clarity in the next loop
-            for datum in observed:
-                # print datum[0].text
-                # print datum[2].tag
-                # print datum[2].text
-                for field in datum:
-                    # print field
-                    # print field.tag, 'tag'
-                    # print field.attrib, 'attrib'
-                    # print field.text, 'text'
-                    # print field.keys()
-                    # print field.get('name')
-                    if field.get('name') == "Flow":
-                        if field.get('units') == "kcfs":
-                            value = float(field.text) * 1000
-                            # print value
-                            total += value
-                        if field.get('units') == "cfs":
-                            value = float(field.text)
-                            total += value
-                        # print field.text
-                    if field.get('timezone') == "UTC":
-                        time = field.text
-                        time1 = time.replace("T", "-")
-                        time_split = time1.split("-")
-                        year = int(time_split[0])
-                        month = int(time_split[1])
-                        day = int(time_split[2])
-                        hour_minute = time_split[3].split(":")
-                        hour = int(hour_minute[0])
-                        minute = int(hour_minute[1])
-                display_data.append([datetime(year, month, day, hour, minute), value])
-        if child.tag == "forecast":
-            forecast = child
-            for datum in forecast:
-                for field in datum:
-                    if field.get('name') == "Flow":
-                        if field.get('units') == "kcfs":
-                            value = float(field.text) * 1000
+    flow_data =[]
+    flow = float()
+    stage_data = []
+    stage = float()
 
-                        if field.get('units') == "cfs":
-                            value = float(field.text)
-
-                    if field.get('timezone') == "UTC":
-                        time = field.text
-                        time1 = time.replace("T", "-")
-                        time_split = time1.split("-")
-                        year = int(time_split[0])
-                        month = int(time_split[1])
-                        day = int(time_split[2])
-                        hour_minute = time_split[3].split(":")
-                        hour = int(hour_minute[0])
-                        minute = int(hour_minute[1])
-
-                display_data.append([datetime(year, month, day, hour, minute), value])
-
-        display_data.sort()  # Due to XML formatting the sheet must be sorted to place forecasts after observations
+    for item in python_data:
+        flow_data.append([item[1], item[4]])
+        flow += item[4]
+        stage_data.append([item[1], item[2]])
+        stage += item[2]
 
     # Check if AHPS flow data exists
-    gotdata = False
-    if total > 0:
-        gotdata = True
+    gotdata_flow = False
+    if flow > 0:
+        gotdata_flow = True
 
     # Plot AHPS flow data
     timeseries_plot = TimeSeries(
@@ -302,41 +308,13 @@ def ahps(request):
         y_axis_units='cfs',
         series=[{
             'name': 'Streamflow',
-            'data': display_data
+            'data': flow_data
         }]
     )
 
-    # Gets stage data in a list
-    observed_stage_data = []
-    value_stage = float()
-    total_stage = float()
-    site = ElTree.fromstring(data)
-    for child in site:
-        if child.tag == "observed":
-            observed = child  # This is to add clarity in the next loop
-            for datum in observed:
-                for field in datum:
-                    if field.get('name') == "Stage":
-                        if field.get('units') == "ft":
-                            value_stage = float(field.text)
-                            total_stage += value_stage
-
-                    if field.get('timezone') == "UTC":
-                        time = field.text
-                        time1 = time.replace("T", "-")
-                        time_split = time1.split("-")
-                        year = int(time_split[0])
-                        month = int(time_split[1])
-                        day = int(time_split[2])
-                        hour_minute = time_split[3].split(":")
-                        hour = int(hour_minute[0])
-                        minute = int(hour_minute[1])
-
-                observed_stage_data.append([datetime(year, month, day, hour, minute), value_stage])
-
     # Check if AHPS stagedata exists
     gotdata_stage = False
-    if total_stage > 0:
+    if stage > 0:
         gotdata_stage = True
 
     # Plot AHPS stage data
@@ -349,11 +327,11 @@ def ahps(request):
         y_axis_units='ft',
         series=[{
             'name': 'Stage',
-            'data': observed_stage_data
+            'data': stage_data
         }]
     )
 
-    context = ({"gaugeno": gauge_id, "waterbody": waterbody, "timeseries_plot": timeseries_plot, "gotdata": gotdata,
+    context = ({"gaugeno": gauge_id, "waterbody": waterbody, "timeseries_plot": timeseries_plot, "gotdata_flow": gotdata_flow,
                 "timeseries_plot_stage": timeseries_plot_stage, "gotdata_stage": gotdata_stage})
 
     return render(request, 'gaugeviewwml/ahps.html', context)
@@ -557,26 +535,42 @@ def usgs(request):
 
 
 def get_water_ml(request):
+    """
+    :param request: This URL request for the page includes GET information
+    :return: This will return an XML file as a download, including all necessary information
+    """
+    type = request.GET['type']
 
-    gauge_id = request.GET['gaugeid']
-    start = request.GET['start']
-    end = request.GET['end']
+    if type == 'usgs':
+        gauge_id = request.GET['gaugeid']
+        start = request.GET['start']
+        end = request.GET['end']
 
-    # data = get_usgs_data(gauge_id, start, end)
-    # metadata, data = convert_usgs_to_python(data)
-    # metadata.append({'SiteName': sitename})
-    # time_series = format_time_series_usgs(data)
+        # Use the USGS IV Web Services Rest endpoint to download the proper xml document
+        data = get_usgs_xml(gauge_id, start, end)
+        xml_response = HttpResponse(data, content_type='text/xml')
+        xml_response['Content-Disposition'] = "attachment; filename=output-time-series.xml"
 
-    # context = {"gaugeid": gauge_id, "metadata": metadata, "time_series": time_series}
+    elif type == 'ahps':
+        gauge_id = request.GET['gaugeid']
 
-    # xml_response = render_to_response('gaugeviewwml/usgswaterml.xml', context)
-    # xml_response['Content-Type'] = 'application/xml'
-    # The following line can be uncommented to cause an XML to be downloaded...
-    # xml_response['content-disposition'] = "attachment; filename=output-time-series.xml"
+        data = get_ahps_data(gauge_id)
+        time_series = convert_ahps_to_python(data)
+        # metadata, data = convert_usgs_to_python(data)
+        # metadata.append({'SiteName': sitename})
+        # time_series = format_time_series_usgs(data)
 
-    # Use the USGS IV Web Services Rest endpoint to download the proper xml document
-    data = get_usgs_xml(gauge_id, start, end)
-    xml_response = HttpResponse(data, content_type='text/xml')
-    xml_response['Content-Disposition'] = "attachment; filename=output-time-series.xml"
+        site = ElTree.fromstring(data)
+        name = site.get('name')
+        request_time = site.get('generationtime')
+
+        metadata = [gauge_id, name, request_time]
+
+        context = {"gaugeid": gauge_id, "metadata": metadata, "time_series": time_series}
+
+        xml_response = render_to_response('gaugeviewwml/ahpswaterml.xml', context)
+        xml_response['Content-Type'] = 'application/xml'
+        # The following line can be uncommented to cause an XML to be downloaded...
+        # xml_response['content-disposition'] = "attachment; filename=output-time-series.xml"
 
     return xml_response
