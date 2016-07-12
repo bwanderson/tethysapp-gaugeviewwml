@@ -22,8 +22,17 @@
     <!--{% gizmo date_picker forecast_date_picker %}-->
     <!--{% gizmo date_picker forecast_date_end_picker %}-->
     <!--{% gizmo select_input forecast_time_select %}-->
-    <center>{% gizmo button generate_graphs_button %}<br><br><br>
+    <center>{% gizmo button generate_graphs_button %}<br><br>
 
+        {% if 'true' in gotdata|lower %}
+        <a id="USGS_CUASHI_tsv-link" target="_blank" href="https://appsdev.hydroshare.org/apps/timeseries-viewer/?src=xmlrest&res_id=
+http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dusgs%26gaugeid%3D{{gaugeid}}%26start%3D{{start}}
+%26end%3D{{end}}" class="btn btn-default btn-sm">Launch with CUASHI Time Series Viewer</a><br><br>
+
+<a id="USGS_waterml-link" target="_blank" href="/apps/gaugeviewwml/waterml/?type=usgs&gaugeid={{gaugeid}}&start={{start}}
+&end={{end}}" class="btn btn-default">Get WaterML</a><br><br>
+         {% endif %}
+        <br>
     <button id="instructions" type="button" class="btn btn-default" data-toggle="modal" data-target="#usgs-popup" >
     Instructions</button></center>
 </form>
@@ -64,17 +73,29 @@
           </div>
           <ol>
           <li class="modalList">Input dates of interest</li>
-          <span class="sub">Input dates of interest for selected gauge on the left sidebar. Dates MUST be formatted
-              YYYY-MM-DD (i.e. 2016-05-21) </span>
+          <span class="sub">Input dates of interest for selected gauge on the left sidebar. </span>
+          <div class="modalNote">
+            <span>
+              Note: Date formats <em><b>MUST</b></em> be YYYY-MM-DD (i.e. 2016-05-21).<br>
+                At locations with data it is available beginning October 1st, 2007 (2007-10-01).
+            </span>
+          </div>
           <li class="modalList">Update Graph</li>
           <span class="sub">After clicking the "Update Graph" button new data will be loaded and displayed. Further
               options are available by selecting buttons along the bottom of the screen</span>
-          </ol>
+          <li class="modalList">Get WaterML</li>
+          <span class="sub">This will download a WaterML file to your computer of the <em>currently displayed</em> data.
+              Be sure to select "Update Graph" if you have changed dates for the data.</span>
+          <li class="modalList">Launch with CUASHI Time Series Viewer</li>
+          <span class="sub">This will launch the CUASHI Time Series Viewer with the displayed data. The Time Series
+              Viewer includes several analysis tools, and shows associated metadata.</span>
           <div class="modalNote">
             <span>
-              Note: Date formats MUST be YYYY-MM-DD (i.e. 2016-05-21).
+              Note: You must currently be logged into Hydroshare, and have authorized appsdev.hydroshare.org/apps in order
+                to use this feature. (Login will not be required in a future update to the Time Series Viewer app)
             </span>
           </div>
+          </ol>
         </div>
       </div>
       <div class="modal-footer">
@@ -132,12 +153,12 @@
 <!--<a id="waterml-link" target="_blank" href="/apps/gaugeviewwml/waterml/?gaugeid={{gaugeid}}&start={{start}}&end={{end}}"-->
    <!--class="btn btn-default">Register in Hydroshare</a>-->
 
-<a id="USGS_CUASHI_tsv-link" target="_blank" href="https://appsdev.hydroshare.org/apps/timeseries-viewer/?src=xmlrest&res_id=
-http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dusgs%26gaugeid%3D{{gaugeid}}%26start%3D{{start}}
-%26end%3D{{end}}" class="btn btn-default">Launch with CUASHI Time Series Viewer</a>
+<!--<a id="USGS_CUASHI_tsv-link" target="_blank" href="https://appsdev.hydroshare.org/apps/timeseries-viewer/?src=xmlrest&res_id=-->
+<!--http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dusgs%26gaugeid%3D{{gaugeid}}%26start%3D{{start}}-->
+<!--%26end%3D{{end}}" class="btn btn-default">Launch with CUASHI Time Series Viewer</a>-->
 
-<a id="USGS_waterml-link" target="_blank" href="/apps/gaugeviewwml/waterml/?type=usgs&gaugeid={{gaugeid}}&start={{start}}
-&end={{end}}" class="btn btn-default">Get WaterML</a>
+<!--<a id="USGS_waterml-link" target="_blank" href="/apps/gaugeviewwml/waterml/?type=usgs&gaugeid={{gaugeid}}&start={{start}}-->
+<!--&end={{end}}" class="btn btn-default">Get WaterML</a>-->
 <!--<a id="waterml-link" target="_blank" href="/apps/gaugeviewwml/waterml" class="btn btn-default">Get WaterML</a>-->
 
 {% endblock %}

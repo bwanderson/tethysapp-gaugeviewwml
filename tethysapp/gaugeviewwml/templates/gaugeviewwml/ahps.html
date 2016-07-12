@@ -5,6 +5,30 @@
 {% block app_navigation_items %}
   <li><a href="{% url 'gaugeviewwml:home' %}">Return to Map</a></li>
     <center>
+        <p><b>Flow Data</b></p>
+        {% if 'true' in gotdata_flow|lower %}
+        <a id="AHPS_CUASHI_tsv_Flow-link" target="_blank" href="https://appsdev.hydroshare.org/apps/timeseries-viewer/?src=xmlrest&res_id=
+        http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dahps%26var%3Dflow%26gaugeid%3D{{gaugeno}}%26lat%3D{{lat}}%26long%3D{{long}}"
+           class="btn btn-default btn-sm">Launch with CUASHI Time Series Viewer</a>
+<br><br>
+        <a id="AHPS_waterml_Flow-link" target="_blank" href="/apps/gaugeviewwml/waterml/?type=ahps&var=flow&gaugeid={{gaugeno}}&lat={{lat}}&long={{long}}"
+           class="btn btn-default">Get WaterML</a>
+         {% else %}
+   There is no flow data available for this location!
+         {% endif%}
+<br><br><br>
+        <p><b>Stage Data</b></p>
+        {% if 'true' in gotdata_stage|lower %}
+        <a id="AHPS_CUASHI_tsv_Stage-link" target="_blank" href="https://appsdev.hydroshare.org/apps/timeseries-viewer/?src=xmlrest&res_id=
+            http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dahps%26var%3Dstage%26gaugeid%3D{{gaugeno}}%26lat%3D{{lat}}%26long%3D{{long}}"
+           class="btn btn-default btn-sm">Launch with CUASHI Time Series Viewer</a>
+<br><br>
+        <a id="AHPS_waterml_Stage-link" target="_blank" href="/apps/gaugeviewwml/waterml/?type=ahps&var=stage&gaugeid={{gaugeno}}&lat={{lat}}&long={{long}}"
+           class="btn btn-default">Get WaterML</a>
+        {% else %}
+   There is no stage data available for this location!
+         {% endif%}
+        <br><br><br>
         <button id="instructions" type="button" class="btn btn-default" data-toggle="modal" data-target="#ahps-popup" >
         Instructions</button>
     </center>
@@ -45,12 +69,19 @@
                 AHPS location.</p>
           </div>
           <ol>
-          <li class="modalList">Input dates of interest</li>
-          <span class="sub">Input dates of interest for selected gauge on the left sidebar. Dates MUST be formatted
-              YYYY-MM-DD (i.e. 2016-05-21) </span>
-          <li class="modalList">Update Graph</li>
-          <span class="sub">After clicking the "Update Graph" button new data will be loaded and displayed. Further
-              options are available by selecting buttons along the bottom of the screen</span>
+          <li class="modalList">All available data (observed and forecast) is displayed</li>
+          <!--<span class="sub">All currently available observed and forecasted data is displayed</span>-->
+          <li class="modalList">Get WaterML</li>
+          <span class="sub">This will download a WaterML file to your computer of either Flow or Stage data.</span>
+          <li class="modalList">Launch with CUASHI Time Series Viewer</li>
+          <span class="sub">This will launch the CUASHI Time Series Viewer with either Flow or Stage data. The Time
+              Series Viewer includes several analysis tools, and shows associated metadata.</span>
+          <div class="modalNote">
+            <span>
+              You must currently be logged into Hydroshare, and have authorized appsdev.hydroshare.org/apps in order
+                to use this feature. (Login will not be required in a future update to the Time Series Viewer app)
+            </span>
+          </div>
           </ol>
         </div>
       </div>
@@ -97,19 +128,19 @@
 
 {% block app_actions %}
 
-<a id="AHPS_CUASHI_tsv_Stage-link" target="_blank" href="https://appsdev.hydroshare.org/apps/timeseries-viewer/?src=xmlrest&res_id=
-http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dahps%26var%3Dstage%26gaugeid%3D{{gaugeno}}%26lat%3D{{lat}}%26long%3D{{long}}"
-   class="btn btn-default">Launch Stage Data with CUASHI Time Series Viewer</a>
+<!--<a id="AHPS_CUASHI_tsv_Stage-link" target="_blank" href="https://appsdev.hydroshare.org/apps/timeseries-viewer/?src=xmlrest&res_id=-->
+<!--http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dahps%26var%3Dstage%26gaugeid%3D{{gaugeno}}%26lat%3D{{lat}}%26long%3D{{long}}"-->
+   <!--class="btn btn-default">Launch Stage Data with CUASHI Time Series Viewer</a>-->
 
-<a id="AHPS_waterml_Stage-link" target="_blank" href="/apps/gaugeviewwml/waterml/?type=ahps&var=stage&gaugeid={{gaugeno}}&lat={{lat}}&long={{long}}"
-   class="btn btn-default">Get WaterML for Stage Data</a>
+<!--<a id="AHPS_waterml_Stage-link" target="_blank" href="/apps/gaugeviewwml/waterml/?type=ahps&var=stage&gaugeid={{gaugeno}}&lat={{lat}}&long={{long}}"-->
+   <!--class="btn btn-default">Get WaterML for Stage Data</a>-->
 
-<a id="AHPS_CUASHI_tsv_Flow-link" target="_blank" href="https://appsdev.hydroshare.org/apps/timeseries-viewer/?src=xmlrest&res_id=
-http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dahps%26var%3Dflow%26gaugeid%3D{{gaugeno}}%26lat%3D{{lat}}%26long%3D{{long}}"
-   class="btn btn-default">Launch Flow Data with CUASHI Time Series Viewer</a>
+<!--<a id="AHPS_CUASHI_tsv_Flow-link" target="_blank" href="https://appsdev.hydroshare.org/apps/timeseries-viewer/?src=xmlrest&res_id=-->
+<!--http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dahps%26var%3Dflow%26gaugeid%3D{{gaugeno}}%26lat%3D{{lat}}%26long%3D{{long}}"-->
+   <!--class="btn btn-default">Launch Flow Data with CUASHI Time Series Viewer</a>-->
 
-<a id="AHPS_waterml_Flow-link" target="_blank" href="/apps/gaugeviewwml/waterml/?type=ahps&var=flow&gaugeid={{gaugeno}}&lat={{lat}}&long={{long}}"
-   class="btn btn-default">Get WaterML for Flow Data</a>
+<!--<a id="AHPS_waterml_Flow-link" target="_blank" href="/apps/gaugeviewwml/waterml/?type=ahps&var=flow&gaugeid={{gaugeno}}&lat={{lat}}&long={{long}}"-->
+   <!--class="btn btn-default">Get WaterML for Flow Data</a>-->
 
 {% endblock %}
 

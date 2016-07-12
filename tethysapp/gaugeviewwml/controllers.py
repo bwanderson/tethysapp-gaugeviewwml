@@ -294,6 +294,7 @@ def create_time_series_usgs(data):
 #     return good_data
 
 
+@login_required()
 def ahps(request):
     """
     Controller for the AHPS.html page
@@ -368,6 +369,7 @@ def ahps(request):
     return render(request, 'gaugeviewwml/ahps.html', context)
 
 
+@login_required()
 def usgs(request):
     """
     Controller for the app usgs page.
