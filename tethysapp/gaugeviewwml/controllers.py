@@ -230,6 +230,35 @@ def convert_ahps_to_python(data):
     return python_data
 
 
+def format_ahps_ts(time_series, time_offset, int):
+    """
+    :param time_series: This is a python time series created with convert_ahps_to_python(data) function
+    :param time_offset: This is an integer of the timezone offset
+    :return: This returns a list of lists formatted as [localtime, time_offset, UTCtime, (observed or forecast), Value],
+                and units
+    """
+
+    formatted_ts = []
+    units = ""
+    for object in time_series:
+        time_change = timedelta(hours=time_offset)
+        localtime = object[1] + time_change
+        localtime = localtime.strftime("%Y-%m-%dT%H:%M")
+        object[1] = object[1].strftime("%Y-%m-%dT%H:%M")
+        if object[0] == 'observed':
+            quality_code = 1
+        elif object[0] == 'forecast':
+            quality_code = 3
+        if int == 0:  # FLOW
+            formatted_ts.append([localtime, time_offset, object[1], object[0], object[4], quality_code])
+            units = object[5]
+        elif int == 1:  # STAGE
+            formatted_ts.append([localtime, time_offset, object[1], object[0], object[2],quality_code])
+            units = object[3]
+
+    return formatted_ts, units
+
+
 def get_ahps_metadata(data):
     """
     :param data: XML string from AHPS web service
@@ -275,16 +304,16 @@ def ahps(request):
     # Get values for gauge_id and waterbody
     gauge_id = request.GET['gaugeno']
     waterbody = request.GET['waterbody']
-    lat = request.GET['lat']
-    long = request.GET['long']
+    latitude = request.GET['lat']
+    longitude = request.GET['long']
 
     # Get AHPS data using a dedicated function
-    data = get_ahps_data(gauge_id) # data will be in a string, but is an xml document
+    data = get_ahps_data(gauge_id)  # data will be in a string, but is an xml document
 
     # Convert AHPS stage and flow data to a usable string format (NOT INCLUDING METADATA)
     python_data = convert_ahps_to_python(data)
 
-    flow_data =[]
+    flow_data = []
     flow = float()
     stage_data = []
     stage = float()
@@ -334,7 +363,7 @@ def ahps(request):
     )
 
     context = ({"gaugeno": gauge_id, "waterbody": waterbody, "timeseries_plot": timeseries_plot, "gotdata_flow": gotdata_flow,
-                "timeseries_plot_stage": timeseries_plot_stage, "gotdata_stage": gotdata_stage, "lat": lat, "long": long})
+                "timeseries_plot_stage": timeseries_plot_stage, "gotdata_stage": gotdata_stage, "lat": latitude, "long": longitude})
 
     return render(request, 'gaugeviewwml/ahps.html', context)
 
@@ -541,9 +570,9 @@ def get_water_ml(request):
     :param request: This URL request for the page includes GET information
     :return: This will return an XML file as a download, including all necessary information
     """
-    type = request.GET['type']
+    gauge_type = request.GET['type']
 
-    if type == 'usgs':
+    if gauge_type == 'usgs':
         gauge_id = request.GET['gaugeid']
         start = request.GET['start']
         end = request.GET['end']
@@ -553,22 +582,42 @@ def get_water_ml(request):
         xml_response = HttpResponse(data, content_type='text/xml')
         xml_response['Content-Disposition'] = "attachment; filename=output-time-series.xml"
 
-    elif type == 'ahps':
+    elif gauge_type == 'ahps':
         gauge_id = request.GET['gaugeid']
-        lat = request.GET['lat']
-        long = request.GET['long']
+        latitude = request.GET['lat']
+        longitude = request.GET['long']
+        variable = request.GET['var']
 
         data = get_ahps_data(gauge_id)
         time_series = convert_ahps_to_python(data)
-        # metadata, data = convert_usgs_to_python(data)
-        # metadata.append({'SiteName': sitename})
-        # time_series = format_time_series_usgs(data)
 
         site = ElTree.fromstring(data)
         name = site.get('name')
         request_time = site.get('generationtime')
+        timezone_full = site.get('timezone')
+        time_offset = ''
 
-        metadata = [gauge_id, name, request_time, lat, long]
+        for i in timezone_full:
+            if i.isdigit():
+                time_offset += i
+
+        time_offset = int(time_offset)
+        time_offset = 0 - time_offset
+
+        metadata = [gauge_id, name, request_time, latitude, longitude]
+
+        if variable == 'flow':
+            time_series, units = format_ahps_ts(time_series, time_offset, 0)
+            metadata.append(0)
+            metadata.append('Flow')
+            metadata.append('Cubic Feet per Second')
+        elif variable == 'stage':
+            time_series, units = format_ahps_ts(time_series, time_offset, 1)
+            metadata.append(1)
+            metadata.append('Stage')
+            metadata.append('Feet')
+
+        metadata.append(units)
 
         context = {"gaugeid": gauge_id, "metadata": metadata, "time_series": time_series}
 
