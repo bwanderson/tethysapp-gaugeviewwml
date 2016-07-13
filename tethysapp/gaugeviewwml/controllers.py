@@ -7,8 +7,8 @@ from tethys_sdk.gizmos import TimeSeries
 import xml.etree.ElementTree as ElTree
 from tethys_sdk.gizmos import DatePicker
 from tethys_sdk.gizmos import Button
-from tethys_sdk.gizmos import TextInput
-from tethys_sdk.gizmos import SelectInput
+# from tethys_sdk.gizmos import TextInput
+# from tethys_sdk.gizmos import SelectInput
 
 
 @login_required()
@@ -191,6 +191,11 @@ def convert_ahps_to_python(data):
     """
     site = ElTree.fromstring(data)
     python_data = []
+    # These variables are defined now to account for when one of them is not present in AHPS data.
+    stage = 0
+    stage_units = ''
+    flow = 0
+    flow_units = ''
 
     for child in site:
         if child.tag == "observed" or child.tag == "forecast":
@@ -230,43 +235,34 @@ def convert_ahps_to_python(data):
     return python_data
 
 
-def format_ahps_ts(time_series, time_offset, int):
+def format_ahps_ts(time_series, time_offset, var_code):
     """
     :param time_series: This is a python time series created with convert_ahps_to_python(data) function
     :param time_offset: This is an integer of the timezone offset
+    :param var_code: this is an integer representing whether Flow or Stage has been requested
     :return: This returns a list of lists formatted as [localtime, time_offset, UTCtime, (observed or forecast), Value],
                 and units
     """
 
     formatted_ts = []
     units = ""
-    for object in time_series:
+    for item in time_series:
         time_change = timedelta(hours=time_offset)
-        localtime = object[1] + time_change
+        localtime = item[1] + time_change
         localtime = localtime.strftime("%Y-%m-%dT%H:%M")
-        object[1] = object[1].strftime("%Y-%m-%dT%H:%M")
-        if object[0] == 'observed':
+        item[1] = item[1].strftime("%Y-%m-%dT%H:%M")
+        if item[0] == 'observed':
             quality_code = 1
-        elif object[0] == 'forecast':
+        elif item[0] == 'forecast':
             quality_code = 3
-        if int == 0:  # FLOW
-            formatted_ts.append([localtime, time_offset, object[1], object[0], object[4], quality_code])
-            units = object[5]
-        elif int == 1:  # STAGE
-            formatted_ts.append([localtime, time_offset, object[1], object[0], object[2],quality_code])
-            units = object[3]
+        if var_code == 0:  # FLOW
+            formatted_ts.append([localtime, time_offset, item[1], item[0], item[4], quality_code])
+            units = item[5]
+        elif var_code == 1:  # STAGE
+            formatted_ts.append([localtime, time_offset, item[1], item[0], item[2], quality_code])
+            units = item[3]
 
     return formatted_ts, units
-
-
-def get_ahps_metadata(data):
-    """
-    :param data: XML string from AHPS web service
-    :return: listed metadata
-    """
-    site = ElTree.fromstring(data)
-    metadata = []
-    site_name = site.name
 
 
 def create_time_series_usgs(data):
@@ -363,8 +359,9 @@ def ahps(request):
         }]
     )
 
-    context = ({"gaugeno": gauge_id, "waterbody": waterbody, "timeseries_plot": timeseries_plot, "gotdata_flow": gotdata_flow,
-                "timeseries_plot_stage": timeseries_plot_stage, "gotdata_stage": gotdata_stage, "lat": latitude, "long": longitude})
+    context = ({"gaugeno": gauge_id, "waterbody": waterbody, "timeseries_plot": timeseries_plot,
+                "gotdata_flow": gotdata_flow, "timeseries_plot_stage": timeseries_plot_stage,
+                "gotdata_stage": gotdata_stage, "lat": latitude, "long": longitude})
 
     return render(request, 'gaugeviewwml/ahps.html', context)
 
@@ -626,6 +623,6 @@ def get_water_ml(request):
         xml_response = render_to_response('gaugeviewwml/ahpswaterml.xml', context)
         xml_response['Content-Type'] = 'application/xml'
         # The following line can be uncommented to cause an XML to be downloaded...
-        # xml_response['content-disposition'] = "attachment; filename=output-time-series.xml"
+        xml_response['content-disposition'] = "attachment; filename=output-time-series.xml"
 
     return xml_response
