@@ -23,7 +23,7 @@ def home(request):
     return render(request, 'gaugeviewwml/home.html', context)
 
 
-def get_usgs_instantaneous_data(gauge_id, start, end):
+def get_usgs_iv_data(gauge_id, start, end):
     """
     :param gauge_id: This is the USGS Id of the gauge
     :param start: This is the properly formatted beginning date YYYY-MM-DD
@@ -181,7 +181,6 @@ def convert_usgs_dv_to_python(data):
     """
     python_data_list = []
     metadata = []
-    python_metadata = []
     contact = None
     retrieval_date = None
     for line in data.splitlines():
@@ -192,40 +191,39 @@ def convert_usgs_dv_to_python(data):
             agency_code = data_array[0]
             site_code = data_array[1]
             time_str = data_array[2]
-            # time_zone = data_array[3]
             value_str = data_array[3]
             value_code = data_array[4]
 
-            # time_str = time_str.replace(" ", "-")
             time_str_array = time_str.split("-")
             year = int(time_str_array[0])
             month = int(time_str_array[1])
             day = int(time_str_array[2])
-            # hour, minute = time_str_array[3].split(":")
-            # hour_int = int(hour)
-            # minute_int = int(minute)
             date = datetime(year, month, day)
-            # utctime, time_offset = convert_to_utc(time, time_zone)
 
             if value_str == "Ice":
-                value_str = "0"
+                value_str = "-9999"
             if value_str == "":
-                value_str = "0"
+                value_str = "-9999"
 
-            python_data_list.append([agency_code, site_code, date, "", "", float(value_str), value_code])
+            python_data_list.append([agency_code, site_code, date, float(value_str), value_code])
 
     for i in metadata:
+        # print i
         i = i[1:].strip()
+        # print i
         if 'Contact:' in i:
             contact = i[9:].strip()
             continue
         if 'retrieved:' in i:
             retrieval_date = i[10:35].strip()
             continue
-    python_metadata.append({'Contact': contact, 'Retrieved': retrieval_date})
+        if i.startswith(agency_code + " " + site_code):
+            site_name = i[14:]
+            continue
+
+    python_metadata = {'Contact': contact, 'Retrieved': retrieval_date, 'SiteName': site_name}
 
     return python_metadata, python_data_list
-
 
 
 def convert_ahps_to_python(data):
@@ -310,29 +308,35 @@ def format_ahps_ts(time_series, time_offset, var_code):
     return formatted_ts, units
 
 
-def create_time_series_usgs(data):
+def create_time_series_usgs(data, values='iv'):
     """
     :param data: Python Data list of USGS NWIS stream gauge observations
+    :param values: Is
     :return: Time series list of all datetime and values for highcharts plotting
     """
     time_series_list = []
-    for i in data:
-        time_series_list.append([i[2], i[5]])
+    if values == 'iv':
+        for i in data:
+            time_series_list.append([i[2], i[5]])
+    elif values == 'dv':
+        for i in data:
+            time_series_list.append([i[2], i[3]])
     return time_series_list
 
 
 # This function was a previous helper function in creating WML 1.1 documents
-# def format_time_series_usgs(data):
-#     """
-#     This is to make a format that Django can recognize and use while building the WaterML
-#     :param data: This is a list object containing all USGS observation data returned from NWIS
-#     :return: This returns a list that has been formatted to be used as context when passed to the WaterML doc
-#     """
-#     good_data = []
-#     for val in data:
-#         good_data.append({'AgencyCode': val[0], 'SiteCode': val[1], 'DateTime': val[2], 'TimeOffset': val[3],
-#                           'UTCTime': val[4], 'Value': val[5], 'ValueCode': val[6]})
-#     return good_data
+def format_ts_usgs_dv(data):
+    """
+    This is to make a format that Django can recognize and use while building the WaterML
+    :param data: This is a list object containing all USGS observation data returned from NWIS
+    :return: This returns a list that has been formatted to be used as context when passed to the WaterML doc
+    """
+    good_data = []
+    for val in data:
+        good_data.append({'AgencyCode': val[0], 'SiteCode': val[1], 'Date': val[2].strftime("%Y-%m-%dT%H:%M"),
+                          'TimeOffset': "0", 'UTCTime': val[2].strftime("%Y-%m-%dT%H:%M"), 'Value': val[3],
+                          'ValueCode': val[4]})
+    return good_data
 
 
 @login_required()
@@ -423,7 +427,7 @@ def usgs(request):
     start = request.GET['start']
     end = request.GET['end']
 
-    inst_data = get_usgs_instantaneous_data(gauge_id, start, end)
+    inst_data = get_usgs_iv_data(gauge_id, start, end)
     metadata, inst_data = convert_usgs_iv_to_python(inst_data)
     inst_time_series_list = create_time_series_usgs(inst_data)
 
@@ -448,7 +452,7 @@ def usgs(request):
 
     dv_data = get_usgs_dv_data(gauge_id, start, end)
     metadata, dv_data = convert_usgs_dv_to_python(dv_data)
-    dv_time_series_list = create_time_series_usgs(dv_data)
+    dv_time_series_list = create_time_series_usgs(dv_data, 'dv')
 
     # Check if USGS daily data exists for time frame
     gotdvdata = False
@@ -475,10 +479,8 @@ def usgs(request):
                                         end_date='0d',
                                         autoclose=True,
                                         format='yyyy-mm-dd',
-                                        # start_date='2015-12-01',
                                         start_view='month',
                                         today_button=True,
-                                        # initial= t_2_weeks_ago.strftime('%Y-%m-%d'))
                                         initial=start)
 
     usgs_end_date_picker = DatePicker(name='end',
@@ -486,15 +488,11 @@ def usgs(request):
                                       end_date='0d',
                                       autoclose=True,
                                       format='yyyy-mm-dd',
-                                      # start_date='2016-02-01',
                                       start_view='month',
                                       today_button=True,
-                                      # initial=t_now.strftime('%Y-%m-%d'))
                                       initial=end)
 
     generate_graphs_button = Button(display_text='Update Graph',
-                                    # name='Generate New Graph',
-                                    # attributes={""},
                                     submit=True)
 
     context = {"gaugeid": gauge_id, "waterbody": waterbody, "generate_graphs_button": generate_graphs_button,
@@ -512,7 +510,7 @@ def get_water_ml(request):
     """
     gauge_type = request.GET['type']
 
-    if gauge_type == 'usgs':
+    if gauge_type == 'usgsiv':
         gauge_id = request.GET['gaugeid']
         start = request.GET['start']
         end = request.GET['end']
@@ -521,6 +519,23 @@ def get_water_ml(request):
         data = get_usgs_xml(gauge_id, start, end)
         xml_response = HttpResponse(data, content_type='text/xml')
         xml_response['Content-Disposition'] = "attachment; filename=output-time-series.xml"
+
+    elif gauge_type == 'usgsdv':
+        gauge_id = request.GET['gaugeid']
+        start = request.GET['start']
+        end = request.GET['end']
+
+        data = get_usgs_dv_data(gauge_id, start, end)
+        metadata, data = convert_usgs_dv_to_python(data)
+        time_series = format_ts_usgs_dv(data)
+        metadata.update({'GaugeID': gauge_id})
+
+        context = {"metadata": metadata, "time_series": time_series}
+
+        xml_response = render_to_response('gaugeviewwml/usgsdvwaterml.xml', context)
+        xml_response['Content-Type'] = 'application/xml'
+        # The following line can be uncommented to cause an XML to be downloaded...
+        # xml_response['content-disposition'] = "attachment; filename=output-time-series.xml"
 
     elif gauge_type == 'ahps':
         gauge_id = request.GET['gaugeid']
@@ -544,22 +559,23 @@ def get_water_ml(request):
         time_offset = int(time_offset)
         time_offset = 0 - time_offset
 
-        metadata = [gauge_id, name, request_time, latitude, longitude]
+        # metadata = [gauge_id, name, request_time, latitude, longitude]
+        metadata = {"GaugeID": gauge_id, "SiteName": name, "ReqTime": request_time, "Lat": latitude, "Long": longitude}
 
         if variable == 'flow':
             time_series, units = format_ahps_ts(time_series, time_offset, 0)
-            metadata.append(0)
-            metadata.append('Flow')
-            metadata.append('Cubic Feet per Second')
+            # metadata.append(0)
+            # metadata.append('Flow')
+            # metadata.append('Cubic Feet per Second')
+            metadata.update({"VarCode": 0, "VarName": 'Flow', "UnitName":'Cubic Feet per Second', "UnitAbbv": units})
         elif variable == 'stage':
             time_series, units = format_ahps_ts(time_series, time_offset, 1)
-            metadata.append(1)
-            metadata.append('Stage')
-            metadata.append('Feet')
+            # metadata.append(1)
+            # metadata.append('Stage')
+            # metadata.append('Feet')
+            metadata.update({"VarCode": 1, "VarName": 'Stage', "UnitName":'Feet', "UnitAbbv": units})
 
-        metadata.append(units)
-
-        context = {"gaugeid": gauge_id, "metadata": metadata, "time_series": time_series}
+        context = {"metadata": metadata, "time_series": time_series}
 
         xml_response = render_to_response('gaugeviewwml/ahpswaterml.xml', context)
         xml_response['Content-Type'] = 'application/xml'

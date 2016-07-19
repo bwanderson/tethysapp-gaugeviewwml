@@ -17,22 +17,22 @@
 
         {% if 'true' in got_inst_data|lower %}
     <br><p><b>Instantaneous (15-Minute) Data</b></p>
-<a target="_blank" href="/apps/gaugeviewwml/waterml/?type=usgs&gaugeid={{gaugeid}}&start={{start}}
+<a target="_blank" href="/apps/gaugeviewwml/waterml/?type=usgsiv&gaugeid={{gaugeid}}&start={{start}}
 &end={{end}}" class="btn btn-default">Get WaterML</a>
         <br><br>
         <a target="_blank" href="https://appsdev.hydroshare.org/apps/timeseries-viewer/?src=xmlrest&res_id=
-http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dusgs%26gaugeid%3D{{gaugeid}}%26start%3D{{start}}
-%26end%3D{{end}}" class="btn btn-default btn-sm">Launch with CUASHI Time Series Viewer</a><br><br>
+http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dusgsiv%26gaugeid%3D{{gaugeid}}%26start%3D
+{{start}}%26end%3D{{end}}" class="btn btn-default btn-sm">Launch with CUASHI Time Series Viewer</a><br><br>
          {% endif %}
 
         {% if 'true' in got_dv_data|lower %}
     <br><p><b>Daily Data</b></p>
-<a target="_blank" href="/apps/gaugeviewwml/waterml/?type=usgs&gaugeid={{gaugeid}}&start={{start}}
+<a target="_blank" href="/apps/gaugeviewwml/waterml/?type=usgsdv&gaugeid={{gaugeid}}&start={{start}}
 &end={{end}}" class="btn btn-default">Get WaterML</a>
         <br><br>
         <a target="_blank" href="https://appsdev.hydroshare.org/apps/timeseries-viewer/?src=xmlrest&res_id=
-http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dusgs%26gaugeid%3D{{gaugeid}}%26start%3D{{start}}
-%26end%3D{{end}}" class="btn btn-default btn-sm">Launch with CUASHI Time Series Viewer</a><br><br>
+http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dusgsdv%26gaugeid%3D{{gaugeid}}%26start%3D
+{{start}}%26end%3D{{end}}" class="btn btn-default btn-sm">Launch with CUASHI Time Series Viewer</a><br><br>
          {% endif %}
 
         <br><br>
