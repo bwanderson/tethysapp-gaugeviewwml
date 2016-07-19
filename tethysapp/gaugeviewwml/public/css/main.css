@@ -30,3 +30,20 @@ th {
     top: 25px;
     margin-left: 10px;
 }
+#desc {
+    color: black;
+    font-size:12pt;
+    margin-left:10px;
+}
+.sub {
+    font-size:12pt;
+}
+.modalNote {
+    color: gray;
+    margin-left:10px;
+}
+.modalList {
+    margin:10px;
+    font-size:16pt;
+    font-variant: small-caps;
+}
