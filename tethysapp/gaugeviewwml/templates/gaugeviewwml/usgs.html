@@ -15,33 +15,55 @@
     {% gizmo date_picker usgs_start_date_picker %}
     {% gizmo date_picker usgs_end_date_picker %}
 
-    <center>{% gizmo button generate_graphs_button %}<br><br>
+    <center>{% gizmo button generate_graphs_button %}<br><br></center>
 
+</form><center>
+
+    <br><p><b>Instantaneous Data</b></p>
         {% if 'true' in got_inst_data|lower %}
-    <br><p><b>Instantaneous (15-Minute) Data</b></p>
 <a target="_blank" href="/apps/gaugeviewwml/waterml/?type=usgsiv&gaugeid={{gaugeid}}&start={{start}}
 &end={{end}}" class="btn btn-default">Get WaterML</a>
-        <br><br>
+    <br>
+    {% if 'false' in got_dv_data|lower %}
+    <br>
         <a target="_blank" href="https://appsdev.hydroshare.org/apps/timeseries-viewer/?src=xmlrest&res_id=
 http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dusgsiv%26gaugeid%3D{{gaugeid}}%26start%3D
 {{start}}%26end%3D{{end}}" class="btn btn-default btn-sm">Launch with CUASHI Time Series Viewer</a><br><br>
+    {% endif %}
+        {% else %}
+   There is no instantaneous flow data available for this time period.<br><br>
          {% endif %}
 
-        {% if 'true' in got_dv_data|lower %}
     <br><p><b>Daily Data</b></p>
+        {% if 'true' in got_dv_data|lower %}
 <a target="_blank" href="/apps/gaugeviewwml/waterml/?type=usgsdv&gaugeid={{gaugeid}}&start={{start}}
 &end={{end}}&lat={{lat}}&long={{long}}" class="btn btn-default">Get WaterML</a>
-        <br><br>
-        <a target="_blank" href="https://appsdev.hydroshare.org/apps/timeseries-viewer/?src=xmlrest&res_id=
+    <br>
+    {% if 'false' in got_inst_data|lower %}
+    <br>
+    <a target="_blank" href="https://appsdev.hydroshare.org/apps/timeseries-viewer/?src=xmlrest&res_id=
 http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dusgsdv%26gaugeid%3D{{gaugeid}}%26start%3D
 {{start}}%26end%3D{{end}}%26lat%3D{{lat}}%26long%3D{{long}}"
            class="btn btn-default btn-sm">Launch with CUASHI Time Series Viewer</a><br><br>
-         {% endif %}
+    {% endif %}
+        {% else %}
+   There is no daily average (mean) flow data available for this time period.<br><br>
+        {% endif %}
 
         <br><br>
+
+    {% if 'true' in got_inst_data|lower %}
+    {% if 'true' in got_dv_data|lower %}
+    <a target="_blank" href="https://appsdev.hydroshare.org/apps/timeseries-viewer/?src=xmlrest&res_id=
+http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dusgsdv%26gaugeid%3D{{gaugeid}}%26start%3D
+{{start}}%26end%3D{{end}}%26lat%3D{{lat}}%26long%3D{{long}},http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml
+%2F%3Ftype%3Dusgsiv%26gaugeid%3D{{gaugeid}}%26start%3D{{start}}%26end%3D{{end}}"
+           class="btn btn-default btn-sm">Launch with CUASHI Time Series Viewer</a><br><br>
+    {% endif %}
+    {% endif %}
     <button id="instructions" type="button" class="btn btn-default" data-toggle="modal" data-target="#usgs-popup" >
     Instructions</button></center>
-</form>
+<!--</form>-->
 {% endblock %}
 
 {% block app_content_wrapper_override %}
@@ -60,11 +82,13 @@ http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dusgsdv%2
           </div>
           <ol>
           <li class="modalList">Input dates of interest</li>
-          <span class="sub">Input dates of interest for selected gauge on the left sidebar. </span>
+          <span class="sub">Input dates of interest for selected gauge on the left sidebar. Many sites do not have
+              recent data, but do have historical instantaneous and daily data. Setting a very early start date
+          (i.e. 1900-01-01) will display all available data.</span>
           <div class="modalNote">
             <span>
               Note: Date formats <em><b>MUST</b></em> be YYYY-MM-DD (i.e. 2016-05-21).<br>
-                At locations with data it is available beginning October 1st, 2007 (2007-10-01).
+                Instantaneous data is available beginning October 1st, 2007 (2007-10-01).
             </span>
           </div>
           <li class="modalList">Update Graph</li>
@@ -112,7 +136,7 @@ http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dusgsdv%2
    {% gizmo plot_view usgs_inst_plot %}
    </div>
  {% else %}
-   <h6>There is no instantaneous (15-minute) data available at this location for this time frame!</h6>
+   <h6>There is no instantaneous data available at this location for this time frame!</h6>
  {% endif %}
 
 {% if 'true' in got_dv_data|lower %}

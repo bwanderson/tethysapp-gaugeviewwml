@@ -7,8 +7,6 @@ from tethys_sdk.gizmos import TimeSeries
 import xml.etree.ElementTree as ElTree
 from tethys_sdk.gizmos import DatePicker
 from tethys_sdk.gizmos import Button
-# from tethys_sdk.gizmos import TextInput
-# from tethys_sdk.gizmos import SelectInput
 
 
 @login_required()
@@ -451,7 +449,7 @@ def usgs(request):
         height='500px',
         width='500px',
         engine='highcharts',
-        title='15-Minute Values Streamflow Plot',
+        title='Instantaneous Values Streamflow Plot',
         y_axis_title='Flow',
         y_axis_units='cfs',
         series=[{
@@ -576,16 +574,10 @@ def get_water_ml(request):
 
         if variable == 'flow':
             time_series, units = format_ahps_ts(time_series, time_offset, 0)
-            # metadata.append(0)
-            # metadata.append('Flow')
-            # metadata.append('Cubic Feet per Second')
-            metadata.update({"VarCode": 0, "VarName": 'Flow', "UnitName":'Cubic Feet per Second', "UnitAbbv": units})
+            metadata.update({"VarCode": 0, "VarName": 'Flow', "UnitName": 'Cubic Feet per Second', "UnitAbbv": units})
         elif variable == 'stage':
             time_series, units = format_ahps_ts(time_series, time_offset, 1)
-            # metadata.append(1)
-            # metadata.append('Stage')
-            # metadata.append('Feet')
-            metadata.update({"VarCode": 1, "VarName": 'Stage', "UnitName":'Feet', "UnitAbbv": units})
+            metadata.update({"VarCode": 1, "VarName": 'Stage', "UnitName": 'Feet', "UnitAbbv": units})
 
         context = {"metadata": metadata, "time_series": time_series}
 
