@@ -158,6 +158,9 @@ def convert_usgs_iv_to_python(data):
             if value_str == "Ice":
                 value_str = "0"
 
+            if value_str == '':
+                continue
+
             python_data_list.append([agency_code, site_code, time, time_offset, utctime, float(value_str), value_code])
 
     for i in metadata:
@@ -181,31 +184,36 @@ def convert_usgs_dv_to_python(data):
     """
     python_data_list = []
     metadata = []
+    data_list = []
     contact = None
     retrieval_date = None
+    site_name = ""
     for line in data.splitlines():
         if line.startswith("#"):
             metadata.append(line)
         if line.startswith("USGS"):
-            data_array = line.split('\t')
-            agency_code = data_array[0]
-            site_code = data_array[1]
-            time_str = data_array[2]
-            value_str = data_array[3]
-            value_code = data_array[4]
+            data_list.append(line)
 
-            time_str_array = time_str.split("-")
-            year = int(time_str_array[0])
-            month = int(time_str_array[1])
-            day = int(time_str_array[2])
-            date = datetime(year, month, day)
+    for line in data_list:
+        data_array = line.split('\t')
+        agency_code = data_array[0]
+        site_code = data_array[1]
+        time_str = data_array[2]
+        value_str = data_array[3]
+        value_code = data_array[4]
 
-            if value_str == "Ice":
-                value_str = "-9999"
-            if value_str == "":
-                value_str = "-9999"
+        time_str_array = time_str.split("-")
+        year = int(time_str_array[0])
+        month = int(time_str_array[1])
+        day = int(time_str_array[2])
+        date = datetime(year, month, day)
 
-            python_data_list.append([agency_code, site_code, date, float(value_str), value_code])
+        if value_str == "Ice":
+            value_str = "-9999"
+        if value_str == "":
+            value_str = "-9999"
+
+        python_data_list.append([agency_code, site_code, date, float(value_str), value_code])
 
     for i in metadata:
         # print i
@@ -217,7 +225,7 @@ def convert_usgs_dv_to_python(data):
         if 'retrieved:' in i:
             retrieval_date = i[10:35].strip()
             continue
-        if i.startswith(agency_code + " " + site_code):
+        if i.startswith("USGS "):
             site_name = i[14:]
             continue
 
@@ -426,6 +434,8 @@ def usgs(request):
     waterbody = request.GET['waterbody']
     start = request.GET['start']
     end = request.GET['end']
+    lat = request.GET['lat']
+    long = request.GET['long']
 
     inst_data = get_usgs_iv_data(gauge_id, start, end)
     metadata, inst_data = convert_usgs_iv_to_python(inst_data)
@@ -498,7 +508,7 @@ def usgs(request):
     context = {"gaugeid": gauge_id, "waterbody": waterbody, "generate_graphs_button": generate_graphs_button,
                "usgs_inst_plot": usgs_inst_plot, "got_inst_data": gotinstdata, "usgs_dv_plot": usgs_dv_plot,
                "got_dv_data": gotdvdata, "usgs_start_date_picker": usgs_start_date_picker,
-               "usgs_end_date_picker": usgs_end_date_picker, "start": start, "end": end}
+               "usgs_end_date_picker": usgs_end_date_picker, "start": start, "end": end, "lat": lat, "long": long}
 
     return render(request, 'gaugeviewwml/usgs.html', context)
 
@@ -524,18 +534,20 @@ def get_water_ml(request):
         gauge_id = request.GET['gaugeid']
         start = request.GET['start']
         end = request.GET['end']
+        latitude = request.GET['lat']
+        longitude = request.GET['long']
 
         data = get_usgs_dv_data(gauge_id, start, end)
         metadata, data = convert_usgs_dv_to_python(data)
         time_series = format_ts_usgs_dv(data)
-        metadata.update({'GaugeID': gauge_id})
+        metadata.update({'GaugeID': gauge_id, "Lat": latitude, "Long": longitude})
 
         context = {"metadata": metadata, "time_series": time_series}
 
         xml_response = render_to_response('gaugeviewwml/usgsdvwaterml.xml', context)
         xml_response['Content-Type'] = 'application/xml'
         # The following line can be uncommented to cause an XML to be downloaded...
-        # xml_response['content-disposition'] = "attachment; filename=output-time-series.xml"
+        xml_response['content-disposition'] = "attachment; filename=output-time-series.xml"
 
     elif gauge_type == 'ahps':
         gauge_id = request.GET['gaugeid']

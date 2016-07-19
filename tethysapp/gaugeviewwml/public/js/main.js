@@ -169,7 +169,9 @@ map.on('singleclick', function(evt) {
                     var gaugeID = USGS_Data.documentElement.children[i].attributes['SITE_NO'].value;
                     var waterbody = USGS_Data.documentElement.children[i].attributes['STATION_NM'].value;
                     var urlLink = USGS_Data.documentElement.children[i].attributes['NWISWEB'].value;
-                    var usgshtml = "/apps/gaugeviewwml/usgs/?gaugeid=" + gaugeID +"&waterbody=" + waterbody+"&start=" + two_weeks_ago_str + "&end=" + datestringnow;
+                    var lat = USGS_Data.documentElement.children[i].attributes['LAT_SITE'].value;
+                    var long = USGS_Data.documentElement.children[i].attributes['LON_SITE'].value;
+                    var usgshtml = "/apps/gaugeviewwml/usgs/?gaugeid=" + gaugeID +"&waterbody=" + waterbody+"&start=" + two_weeks_ago_str + "&end=" + datestringnow + "&lat=" + lat + "&long=" + long;
                     displayContent += '<tr><td>USGS:\n'+gaugeID +'</td><td>'+ waterbody + '</td><td><a href="'+usgshtml+'" target="_blank">View Data</a></td><td><a href="'+urlLink+'" target="_blank">Go to Website</a></td></tr>';
                     }
                 };

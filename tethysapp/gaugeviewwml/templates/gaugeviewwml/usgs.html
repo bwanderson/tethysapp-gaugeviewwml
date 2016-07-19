@@ -10,6 +10,8 @@
 <form action="/apps/gaugeviewwml/usgs/" method="get">
     <input id="gaugeid" name="gaugeid" type="text" value="" class="hidden">
     <input id="waterbody" name="waterbody" type="text" value="{{waterbody}}" class="hidden">
+    <input id="lat" name="lat" type="text" value="{{lat}}" class="hidden">
+    <input id="long" name="long" type="text" value="{{long}}" class="hidden">
     {% gizmo date_picker usgs_start_date_picker %}
     {% gizmo date_picker usgs_end_date_picker %}
 
@@ -28,11 +30,12 @@ http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dusgsiv%2
         {% if 'true' in got_dv_data|lower %}
     <br><p><b>Daily Data</b></p>
 <a target="_blank" href="/apps/gaugeviewwml/waterml/?type=usgsdv&gaugeid={{gaugeid}}&start={{start}}
-&end={{end}}" class="btn btn-default">Get WaterML</a>
+&end={{end}}&lat={{lat}}&long={{long}}" class="btn btn-default">Get WaterML</a>
         <br><br>
         <a target="_blank" href="https://appsdev.hydroshare.org/apps/timeseries-viewer/?src=xmlrest&res_id=
 http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dusgsdv%26gaugeid%3D{{gaugeid}}%26start%3D
-{{start}}%26end%3D{{end}}" class="btn btn-default btn-sm">Launch with CUASHI Time Series Viewer</a><br><br>
+{{start}}%26end%3D{{end}}%26lat%3D{{lat}}%26long%3D{{long}}"
+           class="btn btn-default btn-sm">Launch with CUASHI Time Series Viewer</a><br><br>
          {% endif %}
 
         <br><br>
