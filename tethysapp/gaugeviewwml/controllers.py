@@ -18,7 +18,9 @@ from hs_restclient import HydroShare, HydroShareAuthBasic
 from oauthlib.oauth2 import TokenExpiredError
 from hs_restclient import HydroShare, HydroShareAuthOAuth2, HydroShareNotAuthorized, HydroShareNotFound
 from django.core.exceptions import ObjectDoesNotExist
+from django.conf import settings
 
+hs_hostname = "www.hydroshare.org"
 
 @login_required()
 def home(request):
@@ -598,6 +600,19 @@ def get_water_ml(request):
         xml_response['content-disposition'] = "attachment; filename=output-time-series.xml"
 
     return xml_response
+
+
+def getOAuthHS(request):
+
+    client_id = getattr(settings, "SOCIAL_AUTH_HYDROSHARE_KEY", "None")
+    client_secret = getattr(settings, "SOCIAL_AUTH_HYDROSHARE_SECRET", "None")
+
+    # this line will throw out from django.core.exceptions.ObjectDoesNotExist if current user is not signed in via HydroShare OAuth
+    token = request.user.social_auth.get(provider='hydroshare').extra_data['token_dict']
+    auth = HydroShareAuthOAuth2(client_id, client_secret, token=token)
+    hs = HydroShare(auth=auth, hostname=hs_hostname)
+
+    return hs
 
 
 @login_required()
