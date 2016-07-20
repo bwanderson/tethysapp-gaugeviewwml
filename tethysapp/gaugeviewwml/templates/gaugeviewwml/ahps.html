@@ -3,12 +3,20 @@
 {% load tethys_gizmos %}
 
 {% block app_navigation_items %}
+
+    <input id="gaugeno" name="gaugeno" type="text" value="{{gaugeno}}" class="hidden">
+    <input id="waterbody" name="waterbody" type="text" value="{{waterbody}}" class="hidden">
+    <input id="lat" name="lat" type="text" value="{{lat}}" class="hidden">
+    <input id="long" name="long" type="text" value="{{long}}" class="hidden">
+
   <li><a href="{% url 'gaugeviewwml:home' %}">Return to Map</a></li>
     <center>
         <p><b>Flow Data</b></p>
         {% if 'true' in gotdata_flow|lower %}
         <a id="AHPS_waterml_Flow-link" target="_blank" href="/apps/gaugeviewwml/waterml/?type=ahps&var=flow&gaugeid={{gaugeno}}&lat={{lat}}&long={{long}}"
            class="btn btn-default">Get WaterML</a>
+
+        <a name="btnUploadflow" class="btn btn-default" id="btnUploadflow" data-toggle="modal" data-target="#hydroshare-modal" role="button"><span class="glyphicon hydroshare" aria-hidden="true"></span>Upload to HydroShare</a>
 <br><br>
         {% if 'false' in gotdata_stage|lower %}
         <a id="AHPS_CUASHI_tsv_Flow-link" target="_blank" href="https://appsdev.hydroshare.org/apps/timeseries-viewer/?src=xmlrest&res_id=
@@ -23,6 +31,8 @@ http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dahps%26v
         {% if 'true' in gotdata_stage|lower %}
         <a id="AHPS_waterml_Stage-link" target="_blank" href="/apps/gaugeviewwml/waterml/?type=ahps&var=stage&gaugeid={{gaugeno}}&lat={{lat}}&long={{long}}"
            class="btn btn-default">Get WaterML</a>
+
+        <a name="btnUploadstage" class="btn btn-default" id="btnUploadstage" data-toggle="modal" data-target="#hydroshare-modal" role="button"><span class="glyphicon hydroshare" aria-hidden="true"></span>Upload to HydroShare</a>
 <br><br>
         {% if 'false' in gotdata_flow|lower %}
         <a id="AHPS_CUASHI_tsv_Stage-link" target="_blank" href="https://appsdev.hydroshare.org/apps/timeseries-viewer/?src=xmlrest&res_id=
@@ -91,6 +101,49 @@ http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dahps%26v
   </div>
 </div>
 <!-- End Modal -->
+
+<div class="modal fade" id="hydroshare-modal" tabindex="-1" role="dialog" aria-labelledby="AddHydroshareResource">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h6 class="modal-title">Share this Time Series on HydroShare(*Required)</h6>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="resource-title" class="control-label">*Resource Title:</label>
+                    <input type="text" class="form-control" id="resource-title">
+                </div>
+                <div class="form-group">
+                    <label for="resource-type" class="control-label">*Resource Type:</label>
+                    <select class="form-control" id="resource-type">
+                        <option value="GenericResource">Generic</option>
+                        <option value="RefTimeSeriesResource" selected>Referenced Time Series</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="resource-abstract" class="control-label">*Resource Abstract:</label>
+                    <textarea rows="6" cols="50" id="resource-abstract" class="form-control"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="resource-keywords" class="control-label">*Resource Keywords:</label>
+                    <input type="text" class="form-control" id="resource-keywords">
+                </div>
+                <div class="form-group">
+                    <input type="checkbox" id="resource-public" checked> Make It Public<br>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div id="display-status" class="col-md-8"></div>
+                <div id="footer-buttons" class="col-md-4">
+                    <button type="button" class="btn btn-default footer" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary footer" id="hydroshare-proceed">Proceed</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{block.super}}
 {% endblock %}
 

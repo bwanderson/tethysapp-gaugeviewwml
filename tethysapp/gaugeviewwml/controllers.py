@@ -7,6 +7,17 @@ from tethys_sdk.gizmos import TimeSeries
 import xml.etree.ElementTree as ElTree
 from tethys_sdk.gizmos import DatePicker
 from tethys_sdk.gizmos import Button
+import os
+import shutil
+import json
+import urllib
+import tempfile
+import traceback
+from django.http import JsonResponse
+from hs_restclient import HydroShare, HydroShareAuthBasic
+from oauthlib.oauth2 import TokenExpiredError
+from hs_restclient import HydroShare, HydroShareAuthOAuth2, HydroShareNotAuthorized, HydroShareNotFound
+from django.core.exceptions import ObjectDoesNotExist
 
 
 @login_required()
@@ -587,3 +598,88 @@ def get_water_ml(request):
         xml_response['content-disposition'] = "attachment; filename=output-time-series.xml"
 
     return xml_response
+
+
+@login_required()
+def upload_to_hydroshare(request):
+
+    print "running upload_to_hydroshare!"
+    temp_dir = None
+    try:
+        return_json = {}
+        if request.method == 'POST':
+            post_data = request.POST
+
+            waterml_url = request.get_host() + post_data['waterml_link']
+            #  waterml_url = 'https://appsdev.hydroshare.org' + post_data['waterml_link']
+            print waterml_url
+
+            r_title = post_data['title']
+            r_abstract = post_data['abstract']
+            r_keywords_raw = post_data['keyword']
+            r_keywords = r_keywords_raw.split(',')
+            r_type = post_data['res_type']
+
+            r_public = post_data['public']
+
+            res_id = None
+            hs = getOAuthHS(request)
+            if r_type.lower() == 'genericeresource':
+                #download the kml file to a temp directory
+                temp_dir = tempfile.mkdtemp()
+
+                waterml_file_path = os.path.join(temp_dir, "snow.wml")
+                print waterml_file_path
+
+                urllib.urlretrieve(waterml_url, waterml_file_path)
+
+                #upload the temp file to HydroShare
+                if os.path.exists(waterml_file_path):
+                    res_id = hs.createResource(r_type, r_title, resource_file=waterml_file_path,
+                                                          keywords=r_keywords, abstract=r_abstract)
+                else:
+                    raise
+            elif r_type.lower() == 'reftimeseriesresource':
+
+                ref_type = "rest"
+                metadata = []
+                metadata.append({"referenceurl":
+                             {"value": waterml_url,
+                              "type": ref_type}})
+                print metadata
+                res_id = hs.createResource(r_type,
+                           r_title,
+                           resource_file=None,
+                           keywords=r_keywords,
+                           abstract=r_abstract,
+                           metadata=json.dumps(metadata))
+
+            if res_id is not None:
+                if r_public.lower() == 'true':
+                    hs.setAccessRules(res_id, public=True)
+                return_json['success'] = 'File uploaded successfully!'
+                return_json['newResource'] = res_id
+            else:
+                raise
+
+    except ObjectDoesNotExist as e:
+        print ("ObjectDoesNotExist")
+        print str(e)
+        return_json['error'] = 'Login timed out! Please re-sign in with your HydroShare account.'
+    except TokenExpiredError as e:
+        print str(e)
+        return_json['error'] = 'Login timed out! Please re-sign in with your HydroShare account.'
+    except Exception, err:
+        if "401 Unauthorized" in str(err):
+            return_json['error'] = 'Username or password invalid.'
+        elif "400 Bad Request" in str(err):
+            return_json['error'] = 'File uploaded successfully despite 400 Bad Request Error.'
+        else:
+            traceback.print_exc()
+            return_json['error'] = 'HydroShare rejected the upload for some reason.'
+    finally:
+        if temp_dir != None:
+            if os.path.exists(temp_dir):
+                shutil.rmtree(temp_dir)
+        print return_json
+        return JsonResponse(return_json)

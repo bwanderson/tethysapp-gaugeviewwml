@@ -34,6 +34,9 @@ class GaugeviewerWml(TethysAppBase):
                     UrlMap(name='waterml',
                            url='gaugeviewwml/waterml',
                            controller='gaugeviewwml.controllers.get_water_ml'),
+                    UrlMap(name='upload_to_hydroshare',
+                           url='gaugeviewwml/upload-to-hydroshare',
+                           controller='gaugeviewwml.controllers.upload_to_hydroshare'),
                     )
 
         return url_maps
