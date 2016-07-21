@@ -15,6 +15,7 @@ $('#btnUploadflow').on('click', function () {
     $("#resource-title").val(resTitle);
     $("#resource-abstract").val(resAbstr);
     $("#resource-keywords").val(resKwds);
+    displayStatus.html('');
     resource_url = $("#AHPS_waterml_Flow-link").attr("href");
 
 })
@@ -32,13 +33,14 @@ $('#btnUploadstage').on('click', function () {
     $("#resource-title").val(resTitle);
     $("#resource-abstract").val(resAbstr);
     $("#resource-keywords").val(resKwds);
+    displayStatus.html('');
     resource_url =$("#AHPS_waterml_Stage-link").attr("href");
 
 })
 
 $('#hydroshare-proceed').on('click', function ()  {
            //This function only works on HTML5 browsers.
-    console.log('running hydroshare-proceed!!');
+//    console.log('running hydroshare-proceed!!');
 
     //now we construct the WaterML..
     var waterml_link = resource_url;
@@ -89,10 +91,10 @@ $('#hydroshare-proceed').on('click', function ()  {
             }
         },
         error: function (jqXHR, textStatus, errorThrown) {
-            alert("Error");
-            debugger;
+//            alert("Error");
+//            debugger;
             $('#hydroshare-proceed').prop('disabled', false);
-            console.log(jqXHR + '\n' + textStatus + '\n' + errorThrown);
+//            console.log(jqXHR + '\n' + textStatus + '\n' + errorThrown);
             displayStatus.removeClass('uploading');
             displayStatus.addClass('error');
             displayStatus.html('<em>' + errorThrown + '</em>');

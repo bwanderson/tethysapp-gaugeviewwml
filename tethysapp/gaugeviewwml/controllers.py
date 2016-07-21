@@ -618,7 +618,7 @@ def getOAuthHS(request):
 @login_required()
 def upload_to_hydroshare(request):
 
-    print "running upload_to_hydroshare!"
+    # print "running upload_to_hydroshare!"
     temp_dir = None
     try:
         return_json = {}
@@ -632,7 +632,7 @@ def upload_to_hydroshare(request):
 
             waterml_url = front_end + request.get_host() + post_data['waterml_link']
             #  waterml_url = 'https://appsdev.hydroshare.org' + post_data['waterml_link']
-            print waterml_url
+            # print waterml_url
 
             r_title = post_data['title']
             r_abstract = post_data['abstract']
@@ -649,7 +649,7 @@ def upload_to_hydroshare(request):
                 temp_dir = tempfile.mkdtemp()
 
                 waterml_file_path = os.path.join(temp_dir, "snow.wml")
-                print waterml_file_path
+                # print waterml_file_path
 
                 urllib.urlretrieve(waterml_url, waterml_file_path)
 
@@ -683,11 +683,11 @@ def upload_to_hydroshare(request):
                 raise
 
     except ObjectDoesNotExist as e:
-        print ("ObjectDoesNotExist")
-        print str(e)
+        # print ("ObjectDoesNotExist")
+        # print str(e)
         return_json['error'] = 'Login timed out! Please re-sign in with your HydroShare account.'
     except TokenExpiredError as e:
-        print str(e)
+        # print str(e)
         return_json['error'] = 'Login timed out! Please re-sign in with your HydroShare account.'
     except Exception, err:
         if "401 Unauthorized" in str(err):
@@ -701,5 +701,5 @@ def upload_to_hydroshare(request):
         if temp_dir != None:
             if os.path.exists(temp_dir):
                 shutil.rmtree(temp_dir)
-        print return_json
+        # print return_json
         return JsonResponse(return_json)
