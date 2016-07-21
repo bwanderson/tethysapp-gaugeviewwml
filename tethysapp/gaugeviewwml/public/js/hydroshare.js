@@ -15,7 +15,7 @@ $('#btnUploadflow').on('click', function () {
     $("#resource-title").val(resTitle);
     $("#resource-abstract").val(resAbstr);
     $("#resource-keywords").val(resKwds);
-    resource_url = 'http://tethys.byu.edu' + $("#AHPS_waterml_Flow-link").attr("href");
+    resource_url = $("#AHPS_waterml_Flow-link").attr("href");
 
 })
 
@@ -32,7 +32,7 @@ $('#btnUploadstage').on('click', function () {
     $("#resource-title").val(resTitle);
     $("#resource-abstract").val(resAbstr);
     $("#resource-keywords").val(resKwds);
-    resource_url = 'http://tethys.byu.edu' + $("#AHPS_waterml_Stage-link").attr("href");
+    resource_url =$("#AHPS_waterml_Stage-link").attr("href");
 
 })
 
