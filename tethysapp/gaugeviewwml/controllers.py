@@ -625,7 +625,7 @@ def upload_to_hydroshare(request):
         if request.method == 'POST':
             post_data = request.POST
 
-            waterml_url = request.get_host() + post_data['waterml_link']
+            waterml_url = post_data['waterml_link']
             #  waterml_url = 'https://appsdev.hydroshare.org' + post_data['waterml_link']
             print waterml_url
 
