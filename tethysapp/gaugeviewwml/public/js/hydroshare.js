@@ -2,6 +2,9 @@
 var displayStatus = $('#display-status');
 var resource_url
 var USGS_type
+var displayed_inst_url
+var displayed_dv_url
+
 
 $(function(){
   $("input[name='time_period']").click(function () { // listen for change - not click
