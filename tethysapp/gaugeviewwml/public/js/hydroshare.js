@@ -161,7 +161,7 @@ $('#hydroshare-proceed').on('click', function ()  {
         data: {'title':resourceTitle, 'abstract': resourceAbstract,
             'keyword': resourceKeywords, 'waterml_link': waterml_link, 'public': resourcePublic},
         success: function (data) {
-            debugger;
+//            debugger;
             $('#hydroshare-proceed').prop('disabled', false);
             if ('error' in data) {
                 displayStatus.removeClass('uploading');
