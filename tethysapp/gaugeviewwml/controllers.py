@@ -131,7 +131,18 @@ def convert_to_utc(time, tz):
     return utc_time, time_offset
 
 
-#  Fix Onion Creek Problem
+def check_digit(num):
+    """
+    Check digits in month and day (i.e. 2016-05-09, not 2016-5-9)
+    :param num: input of number that is supposed to be two digits long
+    :return: returns a number that is two digits long
+    """
+    num_str = str(num)
+    if len(num_str) < 2:
+        num_str = '0' + num_str
+    return num_str
+
+
 def convert_usgs_iv_to_python(data):
     """
     This will convert the entire USGS instantaneous file to a python object
@@ -533,8 +544,29 @@ def get_water_ml(request):
 
     if gauge_type == 'usgsiv':
         gauge_id = request.GET['gaugeid']
-        start = request.GET['start']
-        end = request.GET['end']
+        if request.GET.get('span'):
+            span = request.GET['span']
+            if span == 'all':
+                start = '1900-01-01'
+                end = '2100-01-01'
+            else:
+                period, units = span.split('-')
+                span = int(period)
+                t_now = datetime.now()
+                if units == 'y':
+                    span *= 365
+                    time_period = timedelta(days=span)
+                elif units == 'm':
+                    span *= 31
+                    time_period = timedelta(days=span)
+                else:
+                    time_period = timedelta(days=span)
+                t_start = t_now - time_period
+                start = "{0}-{1}-{2}".format(t_start.year, check_digit(t_start.month), check_digit(t_start.day))
+                end = "{0}-{1}-{2}".format(t_now.year, check_digit(t_now.month), check_digit(t_now.day))
+        else:
+            start = request.GET['start']
+            end = request.GET['end']
 
         # Use the USGS IV Web Services Rest endpoint to download the proper xml document
         data = get_usgs_xml(gauge_id, start, end)
@@ -543,11 +575,32 @@ def get_water_ml(request):
 
     elif gauge_type == 'usgsdv':
         gauge_id = request.GET['gaugeid']
-        start = request.GET['start']
-        end = request.GET['end']
         latitude = request.GET['lat']
         longitude = request.GET['long']
-
+        if request.GET.get('span'):
+            span = request.GET['span']
+            if span == 'all':
+                start = '1900-01-01'
+                end = '2100-01-01'
+            else:
+                period, units = span.split('-')
+                span = int(period)
+                t_now = datetime.now()
+                if units == 'y':
+                    span *= 365
+                    time_period = timedelta(days=span)
+                elif units == 'm':
+                    span *= 31
+                    time_period = timedelta(days=span)
+                else:
+                    time_period = timedelta(days=span)
+                t_start = t_now - time_period
+                start = "{0}-{1}-{2}".format(t_start.year, check_digit(t_start.month), check_digit(t_start.day))
+                end = "{0}-{1}-{2}".format(t_now.year, check_digit(t_now.month), check_digit(t_now.day))
+        else:
+            start = request.GET['start']
+            end = request.GET['end']
+        
         data = get_usgs_dv_data(gauge_id, start, end)
         metadata, data = convert_usgs_dv_to_python(data)
         time_series = format_ts_usgs_dv(data)

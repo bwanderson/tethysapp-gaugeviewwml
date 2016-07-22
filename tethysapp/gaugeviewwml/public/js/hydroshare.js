@@ -2,6 +2,30 @@
 var displayStatus = $('#display-status');
 var resource_url
 
+$(function(){
+  $("#preceding").change(function () { // listen for change - not click
+    if( this.checked ) { // use the "raw" DOM property `checked`
+      $("#time_selection").show();
+    }
+  });
+});
+
+$(function(){
+  $("#current").change(function () { // listen for change - not click
+    if( this.checked ) { // use the "raw" DOM property `checked`
+      $("#time_selection").hide();
+    }
+  });
+});
+
+$(function(){
+  $("#all").change(function () { // listen for change - not click
+    if( this.checked ) { // use the "raw" DOM property `checked`
+      $("#time_selection").hide();
+    }
+  });
+});
+
 $('#btnUploadflow').on('click', function () {
 
     gaugeno = $("#gaugeno").val();
