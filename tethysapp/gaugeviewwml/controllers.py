@@ -719,7 +719,7 @@ def upload_to_hydroshare(request):
             metadata.append({"referenceurl":
                          {"value": waterml_url,
                           "type": ref_type}})
-            print metadata
+            # print metadata
             res_id = hs.createResource(r_type,
                        r_title,
                        resource_file=None,
