@@ -7,13 +7,11 @@ var displayed_dv_url
 
 
 $(function(){
-  $("input[name='time_period']").click(function () { // listen for change - not click
-    if( $(this).val() == 'preceding' ) { // use the "raw" DOM property `checked`
-//      console.log('inside if');
+  $("input[name='time_period']").click(function () {
+    if( $(this).val() == 'preceding' ) {
       $("#time_selection").show();
     }
     else {
-//    console.log('inside else');
       $("#time_selection").hide();
     }
   });
@@ -53,7 +51,6 @@ $('#btnUploadstage').on('click', function () {
     $("#resource-keywords").val(resKwds);
     displayStatus.html('');
     resource_url = $("#AHPS_waterml_Stage-link").attr("href");
-//    console.log(typeof resource_url)
 });
 
 
@@ -99,7 +96,6 @@ $('#btnUploaddv').on('click', function () {
 
 $('#hydroshare-proceed').on('click', function ()  {
     //This function only works on HTML5 browsers.
-//    console.log('running hydroshare-proceed!!');
 
     if ($("#time_selection").length > 0) {
         if ($("input[name='time_period']:checked").val() == 'preceding') {
@@ -142,8 +138,6 @@ $('#hydroshare-proceed').on('click', function ()  {
     var resourceAbstract = $('#resource-abstract').val();
     var resourceTitle = $('#resource-title').val();
     var resourceKeywords = $('#resource-keywords').val() ? $('#resource-keywords').val() : "";
-//    var resourceType = $('#resource-type').val();
-//    var resourceType = 'RefTimeSeriesResource'
     var resourcePublic = $("#resource-public").prop("checked");
 
     if (!resourceTitle || !resourceKeywords || !resourceAbstract)
@@ -164,7 +158,6 @@ $('#hydroshare-proceed').on('click', function ()  {
         data: {'title':resourceTitle, 'abstract': resourceAbstract,
             'keyword': resourceKeywords, 'waterml_link': waterml_link, 'public': resourcePublic},
         success: function (data) {
-//            debugger; // THIS LINE????
             $('#hydroshare-proceed').prop('disabled', false);
             if ('error' in data) {
                 displayStatus.removeClass('uploading');
@@ -180,10 +173,7 @@ $('#hydroshare-proceed').on('click', function ()  {
             }
         },
         error: function (jqXHR, textStatus, errorThrown) {
-//            alert("Error");
-//            debugger;
             $('#hydroshare-proceed').prop('disabled', false);
-//            console.log(jqXHR + '\n' + textStatus + '\n' + errorThrown);
             displayStatus.removeClass('uploading');
             displayStatus.addClass('error');
             displayStatus.html('<em>' + errorThrown + '</em>');

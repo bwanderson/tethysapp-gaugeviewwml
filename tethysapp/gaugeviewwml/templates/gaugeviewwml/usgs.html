@@ -4,7 +4,6 @@
 
 {% block app_navigation_items %}
   <li><a href="{% url 'gaugeviewwml:home' %}">Return to Map</a></li>
-
 <br>
 <p><b>Date Selection (Both Graphs)</b></p>
 <form action="/apps/gaugeviewwml/usgs/" method="get">
@@ -14,20 +13,13 @@
     <input id="long" name="long" type="text" value="{{long}}" class="hidden">
     {% gizmo date_picker usgs_start_date_picker %}
     {% gizmo date_picker usgs_end_date_picker %}
-
     <center>{% gizmo button generate_graphs_button %}<br><br></center>
 
 </form><center>
-
     <br><p><b>Instantaneous Data</b></p>
         {% if 'true' in got_inst_data|lower %}
 <a id="USGS_waterml_inst-link" target="_blank" href="/apps/gaugeviewwml/waterml/?type=usgsiv&gaugeid={{gaugeid}}&start={{start}}&end={{end}}" class="btn btn-default">Get WaterML</a>
-
-
-
     <a name="btnUploadinst" class="btn btn-default" id="btnUploadinst" data-toggle="modal" data-target="#hydroshare-modal" role="button"><span class="glyphicon hydroshare" aria-hidden="true"></span>Upload to HydroShare</a>
-
-
     <br>
     {% if 'false' in got_dv_data|lower %}
     <br>
@@ -40,12 +32,7 @@
     <br><p><b>Daily Data</b></p>
         {% if 'true' in got_dv_data|lower %}
 <a id="USGS_waterml_dv-link" target="_blank" href="/apps/gaugeviewwml/waterml/?type=usgsdv&gaugeid={{gaugeid}}&start={{start}}&end={{end}}&lat={{lat}}&long={{long}}" class="btn btn-default">Get WaterML</a>
-
-
-
     <a name="btnUploaddv" class="btn btn-default" id="btnUploaddv" data-toggle="modal" data-target="#hydroshare-modal" role="button"><span class="glyphicon hydroshare" aria-hidden="true"></span>Upload to HydroShare</a>
-
-
     <br>
     {% if 'false' in got_inst_data|lower %}
     <br>
@@ -55,7 +42,6 @@
         {% else %}
    There is no daily average (mean) flow data available for this time period.<br><br>
         {% endif %}
-
         <br><br>
 
     {% if 'true' in got_inst_data|lower %}
@@ -156,15 +142,6 @@
                     </div>
                     <input type="radio" name="time_period" value="all"> All available data
                 </div>
-                <!--</form>-->
-
-                <!--<div class="form-group" hidden="true">-->
-                    <!--<label for="resource-type" class="control-label">*Resource Type:</label>-->
-                    <!--<select class="form-control" id="resource-type">-->
-                        <!--<option value="GenericResource">Generic</option>-->
-                        <!--<option value="RefTimeSeriesResource" selected>Referenced Time Series</option>-->
-                    <!--</select>-->
-                <!--</div>-->
                 <div class="form-group">
                     <label for="resource-abstract" class="control-label">*Resource Abstract:</label>
                     <textarea rows="6" cols="50" id="resource-abstract" class="form-control"></textarea>

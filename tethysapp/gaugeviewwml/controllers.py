@@ -684,8 +684,6 @@ def upload_to_hydroshare(request):
                 front_end = 'http://'
 
             waterml_url = front_end + request.get_host() + post_data['waterml_link']
-            #  waterml_url = 'https://appsdev.hydroshare.org' + post_data['waterml_link']
-            # print waterml_url
 
             r_title = post_data['title']
             r_abstract = post_data['abstract']
@@ -697,22 +695,6 @@ def upload_to_hydroshare(request):
 
             res_id = None
             hs = getOAuthHS(request)
-            # if r_type.lower() == 'genericeresource':
-            #     #download the kml file to a temp directory
-            #     temp_dir = tempfile.mkdtemp()
-            #
-            #     waterml_file_path = os.path.join(temp_dir, "snow.wml")
-            #     # print waterml_file_path
-            #
-            #     urllib.urlretrieve(waterml_url, waterml_file_path)
-            #
-            #     #upload the temp file to HydroShare
-            #     if os.path.exists(waterml_file_path):
-            #         res_id = hs.createResource(r_type, r_title, resource_file=waterml_file_path,
-            #                                               keywords=r_keywords, abstract=r_abstract)
-            #     else:
-            #         raise
-            # elif r_type.lower() == 'reftimeseriesresource':
 
             ref_type = "rest"
             metadata = []
@@ -754,5 +736,4 @@ def upload_to_hydroshare(request):
         if temp_dir != None:
             if os.path.exists(temp_dir):
                 shutil.rmtree(temp_dir)
-        # print return_json
         return JsonResponse(return_json)
