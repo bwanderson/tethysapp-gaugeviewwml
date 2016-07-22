@@ -691,41 +691,41 @@ def upload_to_hydroshare(request):
             r_abstract = post_data['abstract']
             r_keywords_raw = post_data['keyword']
             r_keywords = r_keywords_raw.split(',')
-            r_type = post_data['res_type']
+            r_type = 'RefTimeSeriesResource'
 
             r_public = post_data['public']
 
             res_id = None
             hs = getOAuthHS(request)
-            if r_type.lower() == 'genericeresource':
-                #download the kml file to a temp directory
-                temp_dir = tempfile.mkdtemp()
+            # if r_type.lower() == 'genericeresource':
+            #     #download the kml file to a temp directory
+            #     temp_dir = tempfile.mkdtemp()
+            #
+            #     waterml_file_path = os.path.join(temp_dir, "snow.wml")
+            #     # print waterml_file_path
+            #
+            #     urllib.urlretrieve(waterml_url, waterml_file_path)
+            #
+            #     #upload the temp file to HydroShare
+            #     if os.path.exists(waterml_file_path):
+            #         res_id = hs.createResource(r_type, r_title, resource_file=waterml_file_path,
+            #                                               keywords=r_keywords, abstract=r_abstract)
+            #     else:
+            #         raise
+            # elif r_type.lower() == 'reftimeseriesresource':
 
-                waterml_file_path = os.path.join(temp_dir, "snow.wml")
-                # print waterml_file_path
-
-                urllib.urlretrieve(waterml_url, waterml_file_path)
-
-                #upload the temp file to HydroShare
-                if os.path.exists(waterml_file_path):
-                    res_id = hs.createResource(r_type, r_title, resource_file=waterml_file_path,
-                                                          keywords=r_keywords, abstract=r_abstract)
-                else:
-                    raise
-            elif r_type.lower() == 'reftimeseriesresource':
-
-                ref_type = "rest"
-                metadata = []
-                metadata.append({"referenceurl":
-                             {"value": waterml_url,
-                              "type": ref_type}})
-                print metadata
-                res_id = hs.createResource(r_type,
-                           r_title,
-                           resource_file=None,
-                           keywords=r_keywords,
-                           abstract=r_abstract,
-                           metadata=json.dumps(metadata))
+            ref_type = "rest"
+            metadata = []
+            metadata.append({"referenceurl":
+                         {"value": waterml_url,
+                          "type": ref_type}})
+            print metadata
+            res_id = hs.createResource(r_type,
+                       r_title,
+                       resource_file=None,
+                       keywords=r_keywords,
+                       abstract=r_abstract,
+                       metadata=json.dumps(metadata))
 
             if res_id is not None:
                 if r_public.lower() == 'true':

@@ -21,7 +21,7 @@
 
     <br><p><b>Instantaneous Data</b></p>
         {% if 'true' in got_inst_data|lower %}
-<a target="_blank" href="/apps/gaugeviewwml/waterml/?type=usgsiv&gaugeid={{gaugeid}}&start={{start}}
+<a id="USGS_waterml_inst-link" target="_blank" href="/apps/gaugeviewwml/waterml/?type=usgsiv&gaugeid={{gaugeid}}&start={{start}}
 &end={{end}}" class="btn btn-default">Get WaterML</a>
 
 
@@ -42,7 +42,7 @@ http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dusgsiv%2
 
     <br><p><b>Daily Data</b></p>
         {% if 'true' in got_dv_data|lower %}
-<a target="_blank" href="/apps/gaugeviewwml/waterml/?type=usgsdv&gaugeid={{gaugeid}}&start={{start}}
+<a id="USGS_waterml_dv-link" target="_blank" href="/apps/gaugeviewwml/waterml/?type=usgsdv&gaugeid={{gaugeid}}&start={{start}}
 &end={{end}}&lat={{lat}}&long={{long}}" class="btn btn-default">Get WaterML</a>
 
 
@@ -147,30 +147,33 @@ http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dusgsdv%2
                 </div>
                 <!--<form action="">-->
                 <div class="form-group">
-                    <input type="radio" name="time_period" value="current" id="current" checked> Currently displayed dates<br>
-                    <input type="radio" name="time_period" value="preceding" id="preceding"> For a preceding time period<br>
+                    <input type="radio" name="time_period" value="current" checked> Currently displayed dates<br>
+                    <input type="radio" name="time_period" value="preceding"> For a preceding time period<br>
                     <div class="form-group" id="time_selection" hidden>
-                        <input type="text" name="period" onkeypress='return event.charCode >= 48 && event.charCode <= 57'>
-                        <select id="time_period_units">
-                            <option value="d">Days</option>
-                            <option value="m">Months</option>
-                            <option value="y">Years</option>
-                        </select>
-                        <div class="modalNote">
-                            Input must be a number (i.e. 10, not ten)
-                        </div>
+                        <form class="form-inline">
+                            Always retrieve data for the last:
+                            <input type="text" class="form-control" name="period" onkeypress='return event.charCode >= 48 && event.charCode <= 57'>
+                            <select id="time_period_units">
+                                <option value="d">Days</option>
+                                <option value="m">Months</option>
+                                <option value="y">Years</option>
+                            </select>
+                            <div class="modalNote">
+                                Input must be a number (i.e. 10, not ten)
+                            </div>
+                        </form>
                     </div>
-                    <input type="radio" name="time_period" value="all" id="all"> All available data
+                    <input type="radio" name="time_period" value="all"> All available data
                 </div>
                 <!--</form>-->
 
-                <div class="form-group" hidden="true">
-                    <label for="resource-type" class="control-label">*Resource Type:</label>
-                    <select class="form-control" id="resource-type">
-                        <option value="GenericResource">Generic</option>
-                        <option value="RefTimeSeriesResource" selected>Referenced Time Series</option>
-                    </select>
-                </div>
+                <!--<div class="form-group" hidden="true">-->
+                    <!--<label for="resource-type" class="control-label">*Resource Type:</label>-->
+                    <!--<select class="form-control" id="resource-type">-->
+                        <!--<option value="GenericResource">Generic</option>-->
+                        <!--<option value="RefTimeSeriesResource" selected>Referenced Time Series</option>-->
+                    <!--</select>-->
+                <!--</div>-->
                 <div class="form-group">
                     <label for="resource-abstract" class="control-label">*Resource Abstract:</label>
                     <textarea rows="6" cols="50" id="resource-abstract" class="form-control"></textarea>
