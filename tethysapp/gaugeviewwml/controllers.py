@@ -349,10 +349,10 @@ def create_time_series_usgs(data, values='iv'):
     time_series_list = []
     if values == 'iv':
         for i in data:
-            time_series_list.append([i[2], i[5]])
+            time_series_list.append([i[4], i[5]])
     elif values == 'dv':
         for i in data:
-            time_series_list.append([i[2], i[3]])
+            time_series_list.append([i[4], i[3]])
     return time_series_list
 
 
@@ -392,7 +392,11 @@ def ahps(request):
     # Get AHPS data using a dedicated function
     data = get_ahps_data(gauge_id)  # data will be in a string, but is an xml document
 
+    # Get Closest COMID to gauge
+    comid_filler = str(json.loads(urllib2.urlopen('https://ofmpub.epa.gov/waters10/PointIndexing.Service?pGeometry=POINT(' + longitude + '+' + latitude + ')').read())['output']['ary_flowlines'][0]['comid'])
+
     # Convert AHPS stage and flow data to a usable string format (NOT INCLUDING METADATA)
+    # print data
     python_data = convert_ahps_to_python(data)
 
     flow_data = []
@@ -506,7 +510,7 @@ def ahps(request):
 
     comid_input = TextInput(display_text='COMID',
                             name='comid',
-                            initial='',
+                            initial=comid_filler,
                             classes='form-control')
 
     forecast_date_picker = DatePicker(name='forecast_date',
@@ -568,9 +572,18 @@ def usgs(request):
     :return: renders the page with context available
     """
     # DETERMINE WHAT DATA IS NEEDED (GaugeViewer 308)...
+    do_forecast = request.GET.get("forecast_range", None)
     comid = None
     forecast_range = None
     forecast_date = None
+
+    if do_forecast is None:
+        do_forecast = None
+    else:
+        forecast_range = request.GET['forecast_range']
+        comid = request.GET['comid']
+        forecast_date = request.GET['forecast_date']
+        comid_time = request.GET['comid_time']
 
     gauge_id = request.GET['gaugeid']
     waterbody = request.GET['waterbody']
@@ -578,6 +591,9 @@ def usgs(request):
     end = request.GET['end']
     lat = request.GET['lat']
     long = request.GET['long']
+
+    # Get Closest COMID to gauge
+    comid_filler = str(json.loads(urllib2.urlopen('https://ofmpub.epa.gov/waters10/PointIndexing.Service?pGeometry=POINT(' + long + '+' + lat + ')').read())['output']['ary_flowlines'][0]['comid'])
 
     inst_data = get_usgs_iv_data(gauge_id, start, end)
     metadata, inst_data = convert_usgs_iv_to_python(inst_data)
@@ -593,6 +609,7 @@ def usgs(request):
     time_series_list_api = []
     gotComid = False
     if comid is not None and len(comid) > 0:
+        print 'in loop'
         gotComid = True
         forecast_size = request.GET['forecast_range']
         comid_time = "06"
@@ -711,7 +728,7 @@ def usgs(request):
 
     comid_input = TextInput(display_text='COMID',
                             name='comid',
-                            initial='',
+                            initial=comid_filler,
                             classes='form-control')
 
 
