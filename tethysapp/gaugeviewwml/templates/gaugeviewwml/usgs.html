@@ -13,6 +13,17 @@
     <input id="long" name="long" type="text" value="{{long}}" class="hidden">
     {% gizmo date_picker usgs_start_date_picker %}
     {% gizmo date_picker usgs_end_date_picker %}
+
+  <p><b>Forecasted Streamflow Graph</b></p>
+
+    {% csrf_token %}
+    {% gizmo select_input forecast_range_select %}
+    {% gizmo text_input comid_input %}
+    {% gizmo date_picker forecast_date_picker %}
+    {% gizmo date_picker forecast_date_end_picker %}
+    {% gizmo select_input forecast_time_select %}
+    <!--{% gizmo button generate_graphs_button %}-->
+
     <center>{% gizmo button generate_graphs_button %}<br><br></center>
 
 </form><center>

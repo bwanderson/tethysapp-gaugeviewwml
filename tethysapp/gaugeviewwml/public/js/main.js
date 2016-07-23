@@ -18,11 +18,19 @@ function dataCall(inputURL) {
 //Here we are declaring the projection object for Web Mercator
 var projection = ol.proj.get('EPSG:3857');
 
-//Define Basemap
-//Here we are declaring the raster layer as a separate object to put in the map later
+// Define Basemap
+// Here we are declaring the raster layer as a separate object to put in the map later
 var baseLayer = new ol.layer.Tile({
-    source: new ol.source.OSM({})
-});
+    source: new ol.source.BingMaps({
+        key: '5TC0yID7CYaqv3nVQLKe~xWVt4aXWMJq2Ed72cO4xsA~ApdeyQwHyH_btMjQS1NJ7OHKY8BK-W-EMQMrIavoQUMYXeZIQOUURnKGBOC7UCt4',
+        imagerySet: 'AerialWithLabels' // Options 'Aerial', 'AerialWithLabels', 'Road'
+        })
+    });
+
+// If you desired to use the OSM basemap
+//var baseLayer = new ol.layer.Tile({
+//    source: new ol.source.OSM({})
+//});
 
 // as of July 11, 2016 Mapquest is no longer accessible See: goo.gl/xB0xXt
 //var baseLayer = new ol.layer.Tile({
@@ -61,9 +69,12 @@ var USGS_Gauges = new ol.layer.Tile({
     source:USGS_Source
     }); //Thanks to http://jsfiddle.net/GFarkas/tr0s6uno/ for getting the layer working
 
+//Set opacity of layers
+AHPS_Gauges.setOpacity(0.7);
+USGS_Gauges.setOpacity(0.7);
+
 sources = [AHPS_Source,USGS_Source];
 layers = [baseLayer,AHPS_Gauges, USGS_Gauges];
-
 
 //Establish the view area. Note the reprojection from lat long (EPSG:4326) to Web Mercator (EPSG:3857)
 var view = new ol.View({
@@ -79,6 +90,9 @@ var map = new ol.Map({
     view: view,
 });
 
+//Zoom slider
+map.addControl(new ol.control.ZoomSlider());
+
 var element = document.getElementById('popup');
 
 var popup = new ol.Overlay({
@@ -88,6 +102,61 @@ var popup = new ol.Overlay({
 });
 
 map.addOverlay(popup);
+
+function run_geocoder(){
+        g = new google.maps.Geocoder();
+        search_location = document.getElementById('location_input').value;
+        g.geocode({'address':search_location},geocoder_success);
+    };
+
+function geocoder_success(results, status) {
+    if (status == google.maps.GeocoderStatus.OK) {
+        r=results;
+        flag_geocoded=true;
+        Lat = results[0].geometry.location.lat();
+        Lon = results[0].geometry.location.lng();
+
+        var dbPoint = {
+            "type": "Point",
+            "coordinates": [Lon, Lat]
+        }
+
+        var coords = ol.proj.transform(dbPoint.coordinates, 'EPSG:4326','EPSG:3857');
+        addClickPoint(coords);
+        CenterMap(Lat,Lon);
+        //map.getView().setZoom(14);
+        run_point_indexing_service([Lon,Lat]);
+//        alert(results[0].formatted_address);
+    } else {
+        alert("Geocode was not successful for the following reason: " + status);
+    }
+};
+
+function reverse_geocode(coord){
+    var latlon = new google.maps.LatLng(coord[1],coord[0]);
+    var g = new google.maps.Geocoder();
+    g.geocode({'location':latlon}, reverse_geocode_success);
+};
+
+function reverse_geocode_success(results, status) {
+    if (status == google.maps.GeocoderStatus.OK) {
+        var location = results[1].formatted_address;
+        if (gnis_name != null) {
+            location = gnis_name + ", " + location;
+        }
+
+    } else {
+        document.getElementById("location_input").value = "Location Not Available";
+    }
+};
+
+function handle_search_key(e) {
+    // Handle a key press in the location search text box.
+    // This handles pressing the enter key to initiate the search.
+    if (e.keyCode == 13) {
+        run_geocoder();
+    }
+};
 
 //find current date
 var date = new Date();
@@ -116,8 +185,6 @@ map.on('singleclick', function(evt) {
 
             var view = map.getView();
             var viewResolution = view.getResolution();
-//            var source = AHPS_Gauges.get('visible') ? AHPS_Gauges.getSource() : USGS_Gauges.getSource();
-//            var source = AHPS_Source;
 
 // NEED TO MAKE THIS ONLY CREATE URL IF NECESSARY!!!
             if (document.getElementById("ch_AHPS_Gauges").checked){
@@ -218,3 +285,40 @@ map.on('singleclick', function(evt) {
 
     observer.observe(target, config);
 }());
+
+var trigger_search = document.getElementById("location_input");
+
+trigger_search.addEventListener("keydown",function(e) {
+    // Handle a key press in the location search text box.
+    // This handles pressing the enter key to initiate the search.
+    if (e.keyCode == 13) {
+        run_geocoder();
+    }
+});
+
+// ARE THESE TWO FUNCTIONS DUPLICATES???? WHY ARE THEY NEEDED???
+
+function run_geocoder(){
+        g = new google.maps.Geocoder();
+        search_location = document.getElementById('location_input').value;
+        g.geocode({'address':search_location},geocoder_success);
+    };
+
+function geocoder_success(results, status) {
+    if (status == google.maps.GeocoderStatus.OK) {
+        r=results;
+        flag_geocoded=true;
+        Lat = results[0].geometry.location.lat();
+        Lon = results[0].geometry.location.lng();
+        var dbPoint = {
+            "type": "Point",
+            "coordinates": [Lon, Lat]
+        }
+
+        var coords = ol.proj.transform(dbPoint.coordinates, 'EPSG:4326','EPSG:3857');
+        map.getView().setCenter(coords);
+        map.getView().setZoom(12);
+    } else {
+        alert("Geocode was not successful for the following reason: " + status);
+    }
+};

@@ -20,7 +20,8 @@
           <ol>
           <li class="modalList">Zoom to location</li>
           <span class="sub">USGS Gauges are present in all states, except Alaska, and Puerto Rico. <br>
-              AHPS forecasts are available in every state and Puerto Rico</span>
+              AHPS forecasts are available in every state and Puerto Rico. <br>
+              You can zoom to an area using the search box on the left. </span>
           <li class="modalList">Select gauge of interest</li>
           <span class="sub">USGS gauges are blue, AHPS forecast points are red. Layer display can be toggled in the
               left side-bar.</span>
@@ -52,6 +53,7 @@
 {% endblock %}
 
 {% block app_content %}
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDPgvDUpbEwcbg9C0cRTfDtDa-Vj4WBwI0" ></script>
     <script src="{% static 'gaugeviewwml/css/ol.css' %}" type="text/css"></script>
 
     <!-- This extra bit of style defines the size of the "map" div tag area that shows up later -->
@@ -87,6 +89,9 @@
     <input type="checkbox" onClick="USGS_Gauges.setVisible(!USGS_Gauges.getVisible());"
              id="ch_USGS_Gauges" name="USGS_Gauges" checked>USGS Gauges (Blue)
     <br><br><br>
+  <input type="text" class="form-control" placeholder="Enter Area of Interest" id="location_input" name="location_input"></li><br/>
+  <input type="button" class="btn btn-primary" id="location_search" name="location_search" onClick="run_geocoder();" value="Click to zoom to area">
+    <br><br>
     <button id="instructions" type="button" class="btn btn-default" data-toggle="modal" data-target="#welcome-popup" >
     Instructions</button>
 </div>

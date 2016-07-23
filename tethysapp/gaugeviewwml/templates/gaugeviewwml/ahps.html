@@ -4,13 +4,29 @@
 
 {% block app_navigation_items %}
 
-    <input id="gaugeno" name="gaugeno" type="text" value="{{gaugeno}}" class="hidden">
-    <input id="waterbody" name="waterbody" type="text" value="{{waterbody}}" class="hidden">
-    <input id="lat" name="lat" type="text" value="{{lat}}" class="hidden">
-    <input id="long" name="long" type="text" value="{{long}}" class="hidden">
+    <!--<input id="gaugeno" name="gaugeno" type="text" value="{{gaugeno}}" class="hidden">-->
+    <!--<input id="waterbody" name="waterbody" type="text" value="{{waterbody}}" class="hidden">-->
+    <!--<input id="lat" name="lat" type="text" value="{{lat}}" class="hidden">-->
+    <!--<input id="long" name="long" type="text" value="{{long}}" class="hidden">-->
 
   <li><a href="{% url 'gaugeviewwml:home' %}">Return to Map</a></li>
     <center>
+    <form  action="/apps/gaugeviewwml/ahps/" method="get">
+        <input id="gaugeno" name="gaugeno" type="text" value="{{gaugeno}}" class="hidden">
+        <input id="waterbody" name="waterbody" type="text" value="{{waterbody}}" class="hidden">
+        <input id="lat" name="lat" type="text" value="{{lat}}" class="hidden">
+        <input id="long" name="long" type="text" value="{{long}}" class="hidden">
+
+  <p><b>Forecasted Streamflow Graph</b></p>
+
+    {% csrf_token %}
+    {% gizmo select_input forecast_range_select %}
+    {% gizmo text_input comid_input %}
+    {% gizmo date_picker forecast_date_picker %}
+    {% gizmo date_picker forecast_date_end_picker %}
+    {% gizmo select_input forecast_time_select %}
+    {% gizmo button generate_graphs_button %}
+</form>
         <p><b>Flow Data</b></p>
         {% if 'true' in gotdata_flow|lower %}
         <a id="AHPS_waterml_Flow-link" target="_blank" href="/apps/gaugeviewwml/waterml/?type=ahps&var=flow&gaugeid={{gaugeno}}&lat={{lat}}&long={{long}}"
@@ -172,4 +188,5 @@ http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dahps%26v
 {% block scripts %}
   {{ block.super }}
   <script src="{% static 'gaugeviewwml/vendor/export-csv.js' %}" type="text/javascript"></script>
+  <script src="{% static 'gaugeviewwml/js/ahps.js' %}" type="text/javascript"></script>
 {% endblock %}

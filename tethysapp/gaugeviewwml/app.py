@@ -5,10 +5,9 @@ class GaugeviewerWml(TethysAppBase):
     """
     Tethys app class for Gaugeviewer WML.
     """
-
     name = 'USGS and AHPS Gaugeviewer WML'
     index = 'gaugeviewwml:home'
-    icon = 'gaugeviewwml/images/icon.gif'
+    icon = 'gaugeviewwml/images/gauge_icon.png'
     package = 'gaugeviewwml'
     root_url = 'gaugeviewwml'
     color = '#e67e22'
