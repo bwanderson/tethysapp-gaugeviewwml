@@ -577,9 +577,7 @@ def usgs(request):
     forecast_range = None
     forecast_date = None
 
-    if do_forecast is None:
-        do_forecast = None
-    else:
+    if do_forecast is not None:
         forecast_range = request.GET['forecast_range']
         comid = request.GET['comid']
         forecast_date = request.GET['forecast_date']
