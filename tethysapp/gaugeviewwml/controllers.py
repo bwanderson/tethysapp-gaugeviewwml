@@ -91,6 +91,17 @@ def get_ahps_data(gaugeno):
     return data
 
 
+def get_comid(latitude, longitude):
+    """
+    :param lat: Latitude of point
+    :param long: Longitude of point
+    :return: Returns the nearest comid from the NHD
+    """
+    comid = str(json.loads(urllib2.urlopen('https://ofmpub.epa.gov/waters10/PointIndexing.Service?pGeometry=POINT(' + longitude + '+' + latitude + ')').read())['output']['ary_flowlines'][0]['comid'])
+
+    return comid
+
+
 def convert_to_utc(time, tz):
     """
     :param time: this is a python datetime object
@@ -352,11 +363,10 @@ def create_time_series_usgs(data, values='iv'):
             time_series_list.append([i[4], i[5]])
     elif values == 'dv':
         for i in data:
-            time_series_list.append([i[4], i[3]])
+            time_series_list.append([i[2], i[3]])
     return time_series_list
 
 
-# This function was a previous helper function in creating WML 1.1 documents
 def format_ts_usgs_dv(data):
     """
     This is to make a format that Django can recognize and use while building the WaterML
@@ -378,22 +388,33 @@ def ahps(request):
     :param request: URL request for the page, including GET information
     :return: Returns a rendering of the page with AHPS data available displayed
     """
-
     # REFACTOR TO "This + 2"
     t_now = datetime.now()
     now_str = "{0}-{1}-{2}".format(t_now.year, check_digit(t_now.month), check_digit(t_now.day))
+    t_delta = timedelta(days=7)
+    t_before = t_now - t_delta
+    before_str = "{0}-{1}-{2}".format(t_before.year, check_digit(t_before.month), check_digit(t_before.day))
 
     # Get values for gauge_id and waterbody
     gauge_id = request.GET['gaugeno']
     waterbody = request.GET['waterbody']
     latitude = request.GET['lat']
     longitude = request.GET['long']
+    forecast_date = before_str
+    forecast_date_end = now_str
+    forecast_range_initialize = 'Analysis and Assimilation'
+    comid_time = "06"
+    do_forecast = request.GET.get("forecast_range", None)
+    forecast_range = 'analysis_assim'
+    got_comid = False
+    comid = None
 
     # Get AHPS data using a dedicated function
     data = get_ahps_data(gauge_id)  # data will be in a string, but is an xml document
 
     # Get Closest COMID to gauge
-    comid_filler = str(json.loads(urllib2.urlopen('https://ofmpub.epa.gov/waters10/PointIndexing.Service?pGeometry=POINT(' + longitude + '+' + latitude + ')').read())['output']['ary_flowlines'][0]['comid'])
+    # comid_filler = str(json.loads(urllib2.urlopen('https://ofmpub.epa.gov/waters10/PointIndexing.Service?pGeometry=POINT(' + longitude + '+' + latitude + ')').read())['output']['ary_flowlines'][0]['comid'])
+    comid_filler = get_comid(latitude, longitude)
 
     # Convert AHPS stage and flow data to a usable string format (NOT INCLUDING METADATA)
     # print data
@@ -415,28 +436,34 @@ def ahps(request):
     if flow > 0:
         gotdata_flow = True
 
+    time_series_list_api = []
+
     # REFACTOR TO LINE 'This + 50'
     # URL for getting forecast data and in a list
-    time_series_list_api = []
-    gotComid = False
-    comid = None
-    forecast_range = None
-    comid_time = None
-    forecast_date = None
-    if request.GET.get('comid'):
+
+    if do_forecast is not None:
         comid = request.GET['comid']
-    if comid is not None and len(comid) > 0:
-        gotComid = True
-        forecast_size = request.GET['forecast_range']
+        comid_filler = comid
+        forecast_range = request.GET['forecast_range']
         forecast_date = request.GET['forecast_date']
-        comid_time = "06"
-        if forecast_size == "short":
+
+    if comid is not None and len(comid) > 0:
+        print 'in loop'
+        got_comid = True
+        if forecast_range == "short_range":
+            print 'In Short'
             comid_time = request.GET['comid_time']
-        forecast_date_end = "2016-06-02"
-        if forecast_range == "analysis_assim":
+            forecast_range_initialize = 'Short'
+        elif forecast_range == "analysis_assim":
+            print 'In analsis and Assim'
             forecast_date_end = request.GET['forecast_date_end']
-        url = 'https://apps.hydroshare.org/apps/nwm-forecasts/api/GetWaterML/?config={0}&geom=channel_rt&variable=streamflow&COMID={1}&lon=&lat=&startDate={2}&endDate={3}&time={4}&lag='.format(
-            forecast_size, comid, forecast_date, forecast_date_end, comid_time)
+            forecast_range_initialize = 'Analysis and Assimilation'
+        else:
+            print "In Medium"
+            forecast_range_initialize = 'Medium'
+        print comid_time
+
+        url = 'https://apps.hydroshare.org/apps/nwm-forecasts/api/GetWaterML/?config={0}&geom=channel_rt&variable=streamflow&COMID={1}&lon=&lat=&startDate={2}&endDate={3}&time={4}&lag='.format(forecast_range, comid, forecast_date, forecast_date_end, comid_time)
 
         url_api = urllib2.urlopen(url)
         data_api = url_api.read()
@@ -460,12 +487,12 @@ def ahps(request):
             time_minute = time_split[1].replace(':', '')
             hour = time_split[0]
             minute = time_minute[1]
-            hourInt = int(hour)
-            minuteInt = int(minute)
+            hour_int = int(hour)
+            minute_int = int(minute)
             value = info[7].split('<')
             value1 = value[0].replace('>', '')
             value2 = float(value1)
-            time_series_list_api.append([datetime(year, month, day, hourInt, minuteInt), value2])
+            time_series_list_api.append([datetime(year, month, day, hour_int, minute_int), value2])
 
     # Plot AHPS flow data
     timeseries_plot = TimeSeries(
@@ -481,7 +508,8 @@ def ahps(request):
         }, {
             'name': 'Forecasted Streamflow',
             'data': time_series_list_api
-        }]
+        }],
+        colors=['#7cb5ec', '#b880e9', '#ecc07c', '#7cec84', '#ec7c7c', '#cf7cec', '#df2525', '#90ed7d']
     )
 
     # Check if AHPS stagedata exists
@@ -503,6 +531,8 @@ def ahps(request):
         }]
     )
 
+    comid_time += ':00'
+
     generate_graphs_button = Button(display_text='Generate New Graphs',
                                     name='generate_graphs',
                                     attributes={""},
@@ -520,7 +550,7 @@ def ahps(request):
                                       format='yyyy-mm-dd',
                                       start_view='month',
                                       today_button=True,
-                                      initial=now_str)
+                                      initial=forecast_date)
 
     forecast_date_end_picker = DatePicker(name='forecast_date_end',
                                           display_text='Forecast Date End',
@@ -529,37 +559,35 @@ def ahps(request):
                                           format='yyyy-mm-dd',
                                           start_view='month',
                                           today_button=True,
-                                          initial=now_str)
+                                          initial=forecast_date_end)
 
     forecast_range_select = SelectInput(display_text='Forecast Size',
                                         name='forecast_range',
                                         multiple=False,
                                         options=[('Analysis and Assimilation', 'analysis_assim'),
                                                  ('Short', 'short_range'), ('Medium', 'medium_range')],
-                                        initial=['analysis_assim'],
-                                        original=['analysis_assim'])
+                                        initial=forecast_range_initialize,
+                                        original=True)
 
     forecast_time_select = SelectInput(display_text='Start Time',
                                        name='comid_time',
                                        multiple=False,
-                                       options=[('12:00 am', "00"), ('1:00 am', "01"), ('2:00 am', "02"),
-                                                ('3:00 am', "03"), ('4:00 am', "04"), ('5:00 am', "05"),
-                                                ('6:00 am', "06"), ('7:00 am', "07"), ('8:00 am', "08"),
-                                                ('9:00 am', "09"), ('10:00 am', "10"), ('11:00 am', "11"),
-                                                ('12:00 pm', "12"), ('1:00 pm', "13"), ('2:00 pm', "14"),
-                                                ('3:00 pm', "15"), ('4:00 pm', "16"), ('5:00 pm', "17"),
-                                                ('6:00 pm', "18"), ('7:00 pm', "19"), ('8:00 pm', "20"),
-                                                ('9:00 pm', "21"), ('10:00 pm', "22"), ('11:00 pm', "23")],
-                                       initial=['12'],
-                                       original=['12'])
+                                       options=[('00:00', "00"), ('01:00', "01"), ('02:00', "02"), ('03:00', "03"),
+                                                ('04:00', "04"), ('05:00', "05"), ('06:00', "06"), ('07:00', "07"),
+                                                ('08:00', "08"), ('09:00', "09"), ('10:00', "10"), ('11:00', "11"),
+                                                ('12:00', "12"), ('13:00', "13"), ('14:00', "14"), ('15:00', "15"),
+                                                ('16:00', "16"), ('17:00', "17"), ('18:00', "18"), ('19:00', "19"),
+                                                ('20:00', "20"), ('21:00', "21"), ('22:00', "22"), ('23:00', "23")],
+                                       initial=comid_time,
+                                       original=True)
 
     context = ({"gaugeno": gauge_id, "waterbody": waterbody, "timeseries_plot": timeseries_plot,
                 "gotdata_flow": gotdata_flow, "timeseries_plot_stage": timeseries_plot_stage,
                 "gotdata_stage": gotdata_stage, "lat": latitude, "long": longitude,
                 "generate_graphs_button": generate_graphs_button, "comid_input": comid_input,
-               "forecast_date_picker": forecast_date_picker, "forecast_date_end_picker": forecast_date_end_picker,
-               "forecast_range_select": forecast_range_select, "forecast_time_select": forecast_time_select,
-               "comid": comid, "gotComid": gotComid})
+                "forecast_date_picker": forecast_date_picker, "forecast_date_end_picker": forecast_date_end_picker,
+                "forecast_range_select": forecast_range_select, "forecast_time_select": forecast_time_select,
+                "comid": comid, "gotComid": got_comid})
 
     return render(request, 'gaugeviewwml/ahps.html', context)
 
@@ -572,26 +600,31 @@ def usgs(request):
     :return: renders the page with context available
     """
     # DETERMINE WHAT DATA IS NEEDED (GaugeViewer 308)...
-    do_forecast = request.GET.get("forecast_range", None)
-    comid = None
-    forecast_range = None
-    forecast_date = None
-
-    if do_forecast is not None:
-        forecast_range = request.GET['forecast_range']
-        comid = request.GET['comid']
-        forecast_date = request.GET['forecast_date']
-        comid_time = request.GET['comid_time']
-
     gauge_id = request.GET['gaugeid']
     waterbody = request.GET['waterbody']
     start = request.GET['start']
     end = request.GET['end']
     lat = request.GET['lat']
     long = request.GET['long']
+    do_forecast = request.GET.get("forecast_range", None)
+    comid = None
+    forecast_range = 'analysis_assim'
+    forecast_range_initialize = 'Analysis and Assimilation'
+    forecast_date = start
+    forecast_date_end = end
+    comid_time = "06"
+    got_comid = False
 
     # Get Closest COMID to gauge
-    comid_filler = str(json.loads(urllib2.urlopen('https://ofmpub.epa.gov/waters10/PointIndexing.Service?pGeometry=POINT(' + long + '+' + lat + ')').read())['output']['ary_flowlines'][0]['comid'])
+    # comid_filler = str(json.loads(urllib2.urlopen('https://ofmpub.epa.gov/waters10/PointIndexing.Service?pGeometry=POINT(' + long + '+' + lat + ')').read())['output']['ary_flowlines'][0]['comid'])
+    comid_filler = get_comid(lat, long)
+
+    if do_forecast is not None:
+        forecast_range = request.GET['forecast_range']
+        comid = request.GET['comid']
+        comid_filler = comid
+        forecast_date = request.GET['forecast_date']
+        # comid_time = request.GET['comid_time']
 
     inst_data = get_usgs_iv_data(gauge_id, start, end)
     metadata, inst_data = convert_usgs_iv_to_python(inst_data)
@@ -604,20 +637,25 @@ def usgs(request):
 
     # REFACTOR TO LINE "This + 40"
     # URL for getting forecast data and in a list
+
     time_series_list_api = []
-    gotComid = False
     if comid is not None and len(comid) > 0:
-        print 'in loop'
-        gotComid = True
-        forecast_size = request.GET['forecast_range']
-        comid_time = "06"
-        if forecast_size == "short":
+        # print 'in loop'
+        got_comid = True
+        if forecast_range == "short_range":
+            # print 'In Short'
             comid_time = request.GET['comid_time']
-        forecast_date_end = "2016-06-02"
-        if forecast_range == "analysis_assim":
+            forecast_range_initialize = 'Short'
+        elif forecast_range == "analysis_assim":
+            # print 'In analsis and Assim'
             forecast_date_end = request.GET['forecast_date_end']
+            forecast_range_initialize = 'Analysis and Assimilation'
+        else:
+            # print "In Medium"
+            forecast_range_initialize = 'Medium'
+        # print comid_time
         url = 'https://apps.hydroshare.org/apps/nwm-forecasts/api/GetWaterML/?config={0}&geom=channel_rt&variable=streamflow&COMID={1}&lon=&lat=&startDate={2}&endDate={3}&time={4}&lag='.format(forecast_range, comid, forecast_date, forecast_date_end, comid_time)
-        print url
+        # print url
         url_api = urllib2.urlopen(url)
         data_api = url_api.read()
         x = data_api.split('dateTimeUTC=')
@@ -625,8 +663,8 @@ def usgs(request):
 
         for elm in x:
             info = elm.split(' ')
-            time1 = info[0].replace('T',' ')
-            time2 = time1.replace('"','')
+            time1 = info[0].replace('T', ' ')
+            time2 = time1.replace('"', '')
             time3 = time2[:-3]
             time4 = time3.split(' ')
             time5 = time4[0].split('-')
@@ -639,12 +677,12 @@ def usgs(request):
             time_minute = time_split[1].replace(':', '')
             hour = time_split[0]
             minute = time_minute[1]
-            hourInt = int(hour)
-            minuteInt = int(minute)
+            hour_int = int(hour)
+            minute_int = int(minute)
             value = info[7].split('<')
-            value1 = value[0].replace('>','')
+            value1 = value[0].replace('>', '')
             value2 = float(value1)
-            time_series_list_api.append([datetime(year, month, day, hourInt, minuteInt), value2])
+            time_series_list_api.append([datetime(year, month, day, hour_int, minute_int), value2])
 
     # Plot USGS data
     usgs_inst_plot = TimeSeries(
@@ -660,24 +698,9 @@ def usgs(request):
         }, {
             'name': 'Forecasted Streamflow',
             'data': time_series_list_api
-        }]
+        }],
+        colors=['#7cb5ec', '#b880e9', '#ecc07c', '#7cec84', '#ec7c7c', '#cf7cec', '#df2525', '#90ed7d']
     )
-
-
-    # Plot forecast data
-    nwm_forecast_plot = TimeSeries(
-        height='500px',
-        width='500px',
-        engine='highcharts',
-        title='Streamflow Forecast',
-        y_axis_title='Streamflow',
-        y_axis_units='cfs',
-        series=[{
-            'name': 'Streamflow',
-            'data': time_series_list_api
-        }]
-    )
-
 
     dv_data = get_usgs_dv_data(gauge_id, start, end)
     metadata, dv_data = convert_usgs_dv_to_python(dv_data)
@@ -701,6 +724,8 @@ def usgs(request):
             'data': dv_time_series_list,
         }]
     )
+
+    comid_time += ':00'
 
     # Gizmos
     usgs_start_date_picker = DatePicker(name='start',
@@ -729,7 +754,6 @@ def usgs(request):
                             initial=comid_filler,
                             classes='form-control')
 
-
     forecast_date_picker = DatePicker(name='forecast_date',
                                       display_text='Forecast Date Start',
                                       end_date='0d',
@@ -737,7 +761,7 @@ def usgs(request):
                                       format='yyyy-mm-dd',
                                       start_view='month',
                                       today_button=True,
-                                      initial=end)
+                                      initial=forecast_date)
 
     forecast_date_end_picker = DatePicker(name='forecast_date_end',
                                           display_text='Forecast Date End',
@@ -753,22 +777,20 @@ def usgs(request):
                                         multiple=False,
                                         options=[('Analysis and Assimilation', 'analysis_assim'),
                                                  ('Short', 'short_range'), ('Medium', 'medium_range')],
-                                        initial=['analysis_assim'],
-                                        original=['analysis_assim'])
+                                        initial=forecast_range_initialize,
+                                        original=True)
 
     forecast_time_select = SelectInput(display_text='Start Time',
                                        name='comid_time',
                                        multiple=False,
-                                       options=[('12:00 am', "00"), ('1:00 am', "01"), ('2:00 am', "02"),
-                                                ('3:00 am', "03"), ('4:00 am', "04"), ('5:00 am', "05"),
-                                                ('6:00 am', "06"), ('7:00 am', "07"), ('8:00 am', "08"),
-                                                ('9:00 am', "09"), ('10:00 am', "10"), ('11:00 am', "11"),
-                                                ('12:00 pm', "12"), ('1:00 pm', "13"), ('2:00 pm', "14"),
-                                                ('3:00 pm', "15"), ('4:00 pm', "16"), ('5:00 pm', "17"),
-                                                ('6:00 pm', "18"), ('7:00 pm', "19"), ('8:00 pm', "20"),
-                                                ('9:00 pm', "21"), ('10:00 pm', "22"), ('11:00 pm', "23")],
-                                       initial=['12'],
-                                       original=['12'])
+                                       options=[('00:00', "00"), ('01:00', "01"), ('02:00', "02"), ('03:00', "03"),
+                                                ('04:00', "04"), ('05:00', "05"), ('06:00', "06"), ('07:00', "07"),
+                                                ('08:00', "08"), ('09:00', "09"), ('10:00', "10"), ('11:00', "11"),
+                                                ('12:00', "12"), ('13:00', "13"), ('14:00', "14"), ('15:00', "15"),
+                                                ('16:00', "16"), ('17:00', "17"), ('18:00', "18"), ('19:00', "19"),
+                                                ('20:00', "20"), ('21:00', "21"), ('22:00', "22"), ('23:00', "23")],
+                                       initial=comid_time,
+                                       original=True)
 
     context = {"gaugeid": gauge_id, "waterbody": waterbody, "generate_graphs_button": generate_graphs_button,
                "usgs_inst_plot": usgs_inst_plot, "got_inst_data": gotinstdata, "usgs_dv_plot": usgs_dv_plot,
@@ -777,7 +799,7 @@ def usgs(request):
                "comid_input": comid_input, "forecast_date_picker": forecast_date_picker,
                "forecast_date_end_picker": forecast_date_end_picker, "forecast_range_select": forecast_range_select,
                "forecast_time_select": forecast_time_select, "forecast_range": forecast_range, "comid": comid,
-               "nwm_forecast_plot": nwm_forecast_plot, "gotComid": gotComid}
+               "gotComid": got_comid}
 
     return render(request, 'gaugeviewwml/usgs.html', context)
 
@@ -945,9 +967,7 @@ def upload_to_hydroshare(request):
 
             ref_type = "rest"
             metadata = []
-            metadata.append({"referenceurl":
-                         {"value": waterml_url,
-                          "type": ref_type}})
+            metadata.append({"referenceurl": {"value": waterml_url, "type": ref_type}})
             # print metadata
             res_id = hs.createResource(r_type,
                                        r_title,

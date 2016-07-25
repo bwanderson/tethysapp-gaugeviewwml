@@ -16,7 +16,7 @@
 
   <p><b>Forecasted Streamflow Graph</b></p>
 
-    {% csrf_token %}
+    <!--{% csrf_token %}-->
     {% gizmo select_input forecast_range_select %}
     {% gizmo text_input comid_input %}
     {% gizmo date_picker forecast_date_picker %}
@@ -139,7 +139,7 @@
                     <input type="radio" name="time_period" value="preceding"> For a preceding time period<br>
                     <div class="form-group" id="time_selection" hidden>
                         <form class="form-inline">
-                            Always retrieve data for the last:
+                            Always retrieve data for the most recent:
                             <input type="text" class="form-control" name="period" onkeypress='return event.charCode >= 48 && event.charCode <= 57'>
                             <select id="time_period_units">
                                 <option value="d">Days</option>
