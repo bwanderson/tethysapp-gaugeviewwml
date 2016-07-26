@@ -5,7 +5,7 @@
 {% block app_navigation_items %}
   <li><a href="{% url 'gaugeviewwml:home' %}">Return to Map</a></li>
 <br>
-<p><b>Date Selection (Both Graphs)</b></p>
+<p><b>Date Selection</b></p>
 <form action="/apps/gaugeviewwml/usgs/" method="get">
     <input id="gaugeid" name="gaugeid" type="text" value="" class="hidden">
     <input id="waterbody" name="waterbody" type="text" value="{{waterbody}}" class="hidden">
@@ -81,7 +81,7 @@
             <p id="desc">This page displays available USGS discharge data (USGS Variable 00060) for the selected gauge.</p>
           </div>
           <ol>
-          <li class="modalList">Input dates of interest</li>
+          <li class="modalList">Date Selection</li>
           <span class="sub">Input dates of interest for selected gauge on the left sidebar. Many sites do not have
               recent data, but do have historical instantaneous and daily data. Setting a very early start date
           (i.e. 1900-01-01) will display all available data.</span>
@@ -91,14 +91,32 @@
                 Instantaneous data is available beginning October 1st, 2007 (2007-10-01).
             </span>
           </div>
+          <li class="modalList">Forecasted Streamflow Graph</li>
+            <span class="sub">Select the following options, beginning with Forecast Size, and select Update Graph
+            to view the respective National Water Model Forecast.</span>
+          <div class="modalNote">
+            <span>The COMID has been populated with the nearest COMID to the Gauge location selected, but is not
+                guaranteed to be correct. Please verify that the COMID displayed is the appropriate COMID before
+                updating the graphs.
+            </span>
+          </div>
           <li class="modalList">Update Graph</li>
           <span class="sub">After clicking the "Update Graph" button new data will be loaded and displayed. Further
               options are available by selecting buttons along the bottom of the screen</span>
+
           <li class="modalList">Get WaterML</li>
-          <span class="sub">This will download a WaterML file to your computer of the <em>currently displayed</em> data.
-              Be sure to select "Update Graph" if you have changed dates for the data.</span>
+            <span class="sub">This will download a WaterML file to your computer of the <em>currently displayed</em>
+                USGS data. Be sure to select "Update Graph" if you have changed dates for the data.</span>
+          <li class="modalList">Upload to Hydroshare</li>
+            <span class="sub">This will upload a Referenced Time Series Resource of either Flow or Stage data to
+                Hydroshare.</span>
+          <div class="modalNote">
+            <span>
+              You must have logged into tethys.byu.edu using your Hydroshare credentials, in order to use this feature.
+            </span>
+          </div>
           <li class="modalList">Launch with CUASHI Time Series Viewer</li>
-          <span class="sub">This will launch the CUASHI Time Series Viewer with the displayed data. The Time Series
+            <span class="sub">This will launch the CUASHI Time Series Viewer with the displayed data. The Time Series
               Viewer includes several analysis tools, and shows associated metadata.</span>
           <div class="modalNote">
             <span>
@@ -186,6 +204,11 @@
   <p>Waterbody: {{waterbody}}</p>
   <p>Link to Website:
       <a href="http://waterdata.usgs.gov/nwis/inventory/?site_no={{gaugeid}}" target="_blank">View Website</a></p>
+{% if forecast_failed %}
+<div id="Forecast_Failed" style="font-size:18pt; color: red; font-weight: bold;">
+    The forecast requested is not available, please try again. Please ensure you have requested a past forecast.
+</div>
+{% endif %}
 
 {% if 'true' in got_inst_data|lower %}
    <div>

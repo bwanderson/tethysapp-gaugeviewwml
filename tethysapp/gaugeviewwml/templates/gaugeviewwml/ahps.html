@@ -27,6 +27,7 @@
     {% gizmo select_input forecast_time_select %}
     {% gizmo button generate_graphs_button %}
 </form>
+        <br><br>
         <p><b>Flow Data</b></p>
         {% if 'true' in gotdata_flow|lower %}
         <a id="AHPS_waterml_Flow-link" target="_blank" href="/apps/gaugeviewwml/waterml/?type=ahps&var=flow&gaugeid={{gaugeno}}&lat={{lat}}&long={{long}}"
@@ -89,10 +90,27 @@ http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dahps%26v
           </div>
           <ol>
           <li class="modalList">All available data (observed and forecast) is displayed</li>
+          <li class="modalList">Forecasted Streamflow Graph</li>
+            <span class="sub">Select the following options, beginning with Forecast Size, and select Generate New Graphs
+            to view the respective National Water Model Forecast.</span>
+          <div class="modalNote">
+            <span>The COMID has been populated with the nearest COMID to the Gauge location selected, but is not
+                guaranteed to be correct. Please verify that the COMID displayed is the appropriate COMID before
+                updating the graphs.
+            </span>
+          </div>
           <li class="modalList">Get WaterML</li>
-          <span class="sub">This will download a WaterML file to your computer of either Flow or Stage data.</span>
+            <span class="sub">This will download a WaterML file to your computer of either Flow or Stage data.</span>
+          <li class="modalList">Upload to Hydroshare</li>
+            <span class="sub">This will upload a Referenced Time Series Resource of either Flow or Stage data to
+                Hydroshare.</span>
+          <div class="modalNote">
+            <span>
+              You must have logged into tethys.byu.edu using your Hydroshare credentials, in order to use this feature.
+            </span>
+          </div>
           <li class="modalList">Launch with CUASHI Time Series Viewer</li>
-          <span class="sub">This will launch the CUASHI Time Series Viewer with either Flow or Stage data. The Time
+            <span class="sub">This will launch the CUASHI Time Series Viewer with either Flow or Stage data. The Time
               Series Viewer includes several analysis tools, and shows associated metadata.</span>
           <div class="modalNote">
             <span>

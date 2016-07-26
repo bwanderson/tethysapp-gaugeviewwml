@@ -115,22 +115,41 @@ function geocoder_success(results, status) {
         flag_geocoded=true;
         Lat = results[0].geometry.location.lat();
         Lon = results[0].geometry.location.lng();
-
         var dbPoint = {
             "type": "Point",
             "coordinates": [Lon, Lat]
         }
 
         var coords = ol.proj.transform(dbPoint.coordinates, 'EPSG:4326','EPSG:3857');
-        addClickPoint(coords);
-        CenterMap(Lat,Lon);
-        //map.getView().setZoom(14);
-        run_point_indexing_service([Lon,Lat]);
-//        alert(results[0].formatted_address);
+        map.getView().setCenter(coords);
+        map.getView().setZoom(12);
     } else {
         alert("Geocode was not successful for the following reason: " + status);
-    }
+    };
 };
+
+//function geocoder_success(results, status) {
+//    if (status == google.maps.GeocoderStatus.OK) {
+//        r=results;
+//        flag_geocoded=true;
+//        Lat = results[0].geometry.location.lat();
+//        Lon = results[0].geometry.location.lng();
+//
+//        var dbPoint = {
+//            "type": "Point",
+//            "coordinates": [Lon, Lat]
+//        }
+//
+//        var coords = ol.proj.transform(dbPoint.coordinates, 'EPSG:4326','EPSG:3857');
+////        addClickPoint(coords);
+////        CenterMap(Lat,Lon);
+//        //map.getView().setZoom(14);
+////        run_point_indexing_service([Lon,Lat]);
+////        alert(results[0].formatted_address);
+//    } else {
+//        alert("Geocode was not successful for the following reason: " + status);
+//    }
+//};
 
 function reverse_geocode(coord){
     var latlon = new google.maps.LatLng(coord[1],coord[0]);
@@ -286,37 +305,39 @@ map.on('singleclick', function(evt) {
     observer.observe(target, config);
 }());
 
-var trigger_search = document.getElementById("location_input");
+if (window.location.pathname == '/apps/gaugeviewwml/') {
+    var trigger_search = document.getElementById("location_input");
 
-trigger_search.addEventListener("keydown",function(e) {
-    // Handle a key press in the location search text box.
-    // This handles pressing the enter key to initiate the search.
-    if (e.keyCode == 13) {
-        run_geocoder();
-    }
-});
-
-function run_geocoder(){
-        g = new google.maps.Geocoder();
-        search_location = document.getElementById('location_input').value;
-        g.geocode({'address':search_location},geocoder_success);
-    };
-
-function geocoder_success(results, status) {
-    if (status == google.maps.GeocoderStatus.OK) {
-        r=results;
-        flag_geocoded=true;
-        Lat = results[0].geometry.location.lat();
-        Lon = results[0].geometry.location.lng();
-        var dbPoint = {
-            "type": "Point",
-            "coordinates": [Lon, Lat]
+    trigger_search.addEventListener("keydown",function(e) {
+        // Handle a key press in the location search text box.
+        // This handles pressing the enter key to initiate the search.
+        if (e.keyCode == 13) {
+            run_geocoder();
         }
+    });
+    }
 
-        var coords = ol.proj.transform(dbPoint.coordinates, 'EPSG:4326','EPSG:3857');
-        map.getView().setCenter(coords);
-        map.getView().setZoom(12);
-    } else {
-        alert("Geocode was not successful for the following reason: " + status);
-    };
-};
+//function run_geocoder(){
+//        g = new google.maps.Geocoder();
+//        search_location = document.getElementById('location_input').value;
+//        g.geocode({'address':search_location},geocoder_success);
+//    };
+//
+//function geocoder_success(results, status) {
+//    if (status == google.maps.GeocoderStatus.OK) {
+//        r=results;
+//        flag_geocoded=true;
+//        Lat = results[0].geometry.location.lat();
+//        Lon = results[0].geometry.location.lng();
+//        var dbPoint = {
+//            "type": "Point",
+//            "coordinates": [Lon, Lat]
+//        }
+//
+//        var coords = ol.proj.transform(dbPoint.coordinates, 'EPSG:4326','EPSG:3857');
+//        map.getView().setCenter(coords);
+//        map.getView().setZoom(12);
+//    } else {
+//        alert("Geocode was not successful for the following reason: " + status);
+//    };
+//};

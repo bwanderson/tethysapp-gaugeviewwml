@@ -47,3 +47,9 @@ th {
     font-size:16pt;
     font-variant: small-caps;
 }
+
+#Forecast_Failed {
+    font-size:20pt;
+    color: red;
+    font-weight: bold;
+}

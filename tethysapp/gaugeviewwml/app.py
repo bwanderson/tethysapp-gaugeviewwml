@@ -11,7 +11,9 @@ class GaugeviewerWml(TethysAppBase):
     package = 'gaugeviewwml'
     root_url = 'gaugeviewwml'
     color = '#e67e22'
-    description = 'Allows for viewing USGS and AHPS gauges and downloading WaterML files of the data found.'
+    description = 'Allows for viewing USGS and AHPS gauges, downloading data as a WaterML file, uploading data ' \
+                  'to HydroShare as a Referenced Time Series, launching data in the CUAHSI Time Series Viewer app, ' \
+                  'and comparing to NWM forecasts.'
     enable_feedback = False
     feedback_emails = []
 
