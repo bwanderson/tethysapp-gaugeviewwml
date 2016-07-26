@@ -409,6 +409,7 @@ def ahps(request):
     forecast_range = 'analysis_assim'
     got_comid = False
     comid = None
+    failed = False
 
     # Get AHPS data using a dedicated function
     data = get_ahps_data(gauge_id)  # data will be in a string, but is an xml document
@@ -465,36 +466,40 @@ def ahps(request):
         print comid_time
 
         url = 'https://apps.hydroshare.org/apps/nwm-forecasts/api/GetWaterML/?config={0}&geom=channel_rt&variable=streamflow&COMID={1}&lon=&lat=&startDate={2}&endDate={3}&time={4}&lag='.format(forecast_range, comid, forecast_date, forecast_date_end, comid_time)
-        print url
 
-        url_api = urllib2.urlopen(url)
-        data_api = url_api.read()
-        # print data_api
-        x = data_api.split('dateTimeUTC=')
-        x.pop(0)
+        try:
 
-        for elm in x:
-            info = elm.split(' ')
-            time1 = info[0].replace('T', ' ')
-            time2 = time1.replace('"', '')
-            time3 = time2[:-3]
-            time4 = time3.split(' ')
-            time5 = time4[0].split('-')
-            timedate = time5
-            year = int(timedate[0])
-            month = int(timedate[1])
-            day = int(timedate[2])
-            timetime = time4[1]
-            time_split = timetime.split(':')
-            time_minute = time_split[1].replace(':', '')
-            hour = time_split[0]
-            minute = time_minute[1]
-            hour_int = int(hour)
-            minute_int = int(minute)
-            value = info[7].split('<')
-            value1 = value[0].replace('>', '')
-            value2 = float(value1)
-            time_series_list_api.append([datetime(year, month, day, hour_int, minute_int), value2])
+            url_api = urllib2.urlopen(url)
+            data_api = url_api.read()
+            # print data_api
+            x = data_api.split('dateTimeUTC=')
+            x.pop(0)
+
+            for elm in x:
+                info = elm.split(' ')
+                time1 = info[0].replace('T', ' ')
+                time2 = time1.replace('"', '')
+                time3 = time2[:-3]
+                time4 = time3.split(' ')
+                time5 = time4[0].split('-')
+                timedate = time5
+                year = int(timedate[0])
+                month = int(timedate[1])
+                day = int(timedate[2])
+                timetime = time4[1]
+                time_split = timetime.split(':')
+                time_minute = time_split[1].replace(':', '')
+                hour = time_split[0]
+                minute = time_minute[1]
+                hour_int = int(hour)
+                minute_int = int(minute)
+                value = info[7].split('<')
+                value1 = value[0].replace('>', '')
+                value2 = float(value1)
+                time_series_list_api.append([datetime(year, month, day, hour_int, minute_int), value2])
+        except HTTPError:
+            failed = True
+
 
     # Plot AHPS flow data
     timeseries_plot = TimeSeries(
@@ -583,13 +588,13 @@ def ahps(request):
                                        initial=comid_time,
                                        original=True)
 
-    context = ({"gaugeno": gauge_id, "waterbody": waterbody, "timeseries_plot": timeseries_plot,
+    context = {"gaugeno": gauge_id, "waterbody": waterbody, "timeseries_plot": timeseries_plot,
                 "gotdata_flow": gotdata_flow, "timeseries_plot_stage": timeseries_plot_stage,
                 "gotdata_stage": gotdata_stage, "lat": latitude, "long": longitude,
                 "generate_graphs_button": generate_graphs_button, "comid_input": comid_input,
                 "forecast_date_picker": forecast_date_picker, "forecast_date_end_picker": forecast_date_end_picker,
                 "forecast_range_select": forecast_range_select, "forecast_time_select": forecast_time_select,
-                "comid": comid, "gotComid": got_comid})
+                "comid": comid, "gotComid": got_comid, "forecast_failed": failed}
 
     return render(request, 'gaugeviewwml/ahps.html', context)
 
@@ -659,15 +664,10 @@ def usgs(request):
         # print comid_time
         url = 'https://apps.hydroshare.org/apps/nwm-forecasts/api/GetWaterML/?config={0}&geom=channel_rt&variable=streamflow&COMID={1}&lon=&lat=&startDate={2}&endDate={3}&time={4}&lag='.format(forecast_range, comid, forecast_date, forecast_date_end, comid_time)
 
-        print url
-        print 'hahahahahahahahahaa'
         try:
             url_api = urllib2.urlopen(url)
-            print 'wowzers'
             data_api = url_api.read()
-            print 'coolio'
             x = data_api.split('dateTimeUTC=')
-            print 'Huh'
             x.pop(0)
 
             for elm in x:

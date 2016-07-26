@@ -178,6 +178,12 @@ http%3A%2F%2Ftethys.byu.edu%2Fapps%2Fgaugeviewwml%2Fwaterml%2F%3Ftype%3Dahps%26v
   <p>Link to website: <a href="http://water.weather.gov/ahps2/hydrograph.php?wfo=pub&&gage={{gaugeno}}"
                          target="_blank">View Website</a></p>
 
+{% if forecast_failed %}
+<div id="Forecast_Failed" style="font-size:18pt; color: red; font-weight: bold;">
+    The forecast requested is not available, please try again. Please ensure you have requested a past forecast.
+</div>
+{% endif %}
+
 {% if 'true' in gotdata_flow|lower %}
    <div>
    {% gizmo plot_view timeseries_plot %}
