@@ -40,24 +40,41 @@ var baseLayer = new ol.layer.Tile({
 
 //Define all WMS Sources:
 
+//var AHPS_Source =  new ol.source.TileWMS({
+//        url:'http://geoserver.byu.edu/arcgis/services/NWC/AHPS_Gauges/MapServer/WmsServer?',
+//        params:{
+//            LAYERS:"0",
+////            FORMAT:"image/png", //Not a necessary line, but maybe useful if needed later
+//        },
+//        crossOrigin: 'Anonymous' //This is necessary for CORS security in the browser
+//        });
+//
+//var USGS_Source =  new ol.source.TileWMS({
+//        url:'http://geoserver.byu.edu/arcgis/services/NWC/USGS_Gauges/MapServer/WmsServer?',
+//        params:{
+//            LAYERS:"0",
+////            FORMAT:"image/png", //Not a necessary line, but maybe useful if needed later
+//        },
+//        crossOrigin: 'Anonymous'
+//        });
+
 var AHPS_Source =  new ol.source.TileWMS({
-        url:'http://geoserver.byu.edu/arcgis/services/NWC/AHPS_Gauges/MapServer/WmsServer?',
+        url:'http://tethys.byu.edu:8181/geoserver/wms',
         params:{
-            LAYERS:"0",
+            LAYERS:"gaugeviewwml:AHPS_Gauges",
 //            FORMAT:"image/png", //Not a necessary line, but maybe useful if needed later
         },
         crossOrigin: 'Anonymous' //This is necessary for CORS security in the browser
         });
 
 var USGS_Source =  new ol.source.TileWMS({
-        url:'http://geoserver.byu.edu/arcgis/services/NWC/USGS_Gauges/MapServer/WmsServer?',
+        url:'http://tethys.byu.edu:8181/geoserver/wms',
         params:{
-            LAYERS:"0",
+            LAYERS:"gaugeviewwml:USGS_Gauges",
 //            FORMAT:"image/png", //Not a necessary line, but maybe useful if needed later
         },
         crossOrigin: 'Anonymous'
         });
-
 
 //Define all WMS layers
 //The gauge layers can be changed to layer.Image instead of layer.Tile (and .ImageWMS instead of .TileWMS) for a single tile
@@ -70,8 +87,8 @@ var USGS_Gauges = new ol.layer.Tile({
     }); //Thanks to http://jsfiddle.net/GFarkas/tr0s6uno/ for getting the layer working
 
 //Set opacity of layers
-AHPS_Gauges.setOpacity(0.7);
-USGS_Gauges.setOpacity(0.7);
+//AHPS_Gauges.setOpacity(0.7);
+//USGS_Gauges.setOpacity(0.7);
 
 sources = [AHPS_Source,USGS_Source];
 layers = [baseLayer,AHPS_Gauges, USGS_Gauges];
@@ -127,29 +144,6 @@ function geocoder_success(results, status) {
         alert("Geocode was not successful for the following reason: " + status);
     };
 };
-
-//function geocoder_success(results, status) {
-//    if (status == google.maps.GeocoderStatus.OK) {
-//        r=results;
-//        flag_geocoded=true;
-//        Lat = results[0].geometry.location.lat();
-//        Lon = results[0].geometry.location.lng();
-//
-//        var dbPoint = {
-//            "type": "Point",
-//            "coordinates": [Lon, Lat]
-//        }
-//
-//        var coords = ol.proj.transform(dbPoint.coordinates, 'EPSG:4326','EPSG:3857');
-////        addClickPoint(coords);
-////        CenterMap(Lat,Lon);
-//        //map.getView().setZoom(14);
-////        run_point_indexing_service([Lon,Lat]);
-////        alert(results[0].formatted_address);
-//    } else {
-//        alert("Geocode was not successful for the following reason: " + status);
-//    }
-//};
 
 function reverse_geocode(coord){
     var latlon = new google.maps.LatLng(coord[1],coord[0]);
@@ -223,12 +217,19 @@ map.on('singleclick', function(evt) {
                 var AHPS_Count = AHPS_Data.documentElement.childElementCount;
 
                 //This is for AHPS Gauges
-                for (i = 0; i < AHPS_Count; i++) {
-                    var gaugeID = AHPS_Data.documentElement.children[i].attributes['GaugeLID'].value;
-                    var waterbody = AHPS_Data.documentElement.children[i].attributes['Waterbody'].value;
-                    var urlLink = AHPS_Data.documentElement.children[i].attributes['URL'].value;
-                    var lat = AHPS_Data.documentElement.children[i].attributes['Latitude'].value;
-                    var long = AHPS_Data.documentElement.children[i].attributes['Longitude'].value;
+                for (i = 1; i < AHPS_Count; i++) {
+//                    var gaugeID = AHPS_Data.documentElement.children[i].attributes['GaugeLID'].value;
+//                    var waterbody = AHPS_Data.documentElement.children[i].attributes['Waterbody'].value;
+//                    var urlLink = AHPS_Data.documentElement.children[i].attributes['URL'].value;
+//                    var lat = AHPS_Data.documentElement.children[i].attributes['Latitude'].value;
+//                    var long = AHPS_Data.documentElement.children[i].attributes['Longitude'].value;
+
+                    var gaugeID = AHPS_Data.documentElement.children[i].children[0].children[1].innerHTML;
+                    var waterbody = AHPS_Data.documentElement.children[i].children[0].children[5].innerHTML;
+                    var urlLink = AHPS_Data.documentElement.children[i].children[0].children[8].innerHTML;
+                    var lat = AHPS_Data.documentElement.children[i].children[0].children[3].innerHTML;
+                    var long = AHPS_Data.documentElement.children[i].children[0].children[4].innerHTML;
+
                     var ahpshtml = "/apps/gaugeviewwml/ahps/?gaugeno=" + gaugeID +"&waterbody=" + waterbody + "&lat=" + lat + "&long=" + long;
                     displayContent += '<tr><td>AHPS:\n'+gaugeID +'</td><td>'+ waterbody + '</td><td><a href="'+ahpshtml+'" target="_blank">View Data</a></td><td><a href="'+urlLink+'" target="_blank">Go to Website</a></td></tr>';
                     }
@@ -251,12 +252,19 @@ map.on('singleclick', function(evt) {
                 //console.log(date_old)
 
                 //This is for USGS Gauges
-                for (i = 0; i < USGS_Count; i++) {
-                    var gaugeID = USGS_Data.documentElement.children[i].attributes['SITE_NO'].value;
-                    var waterbody = USGS_Data.documentElement.children[i].attributes['STATION_NM'].value;
-                    var urlLink = USGS_Data.documentElement.children[i].attributes['NWISWEB'].value;
-                    var lat = USGS_Data.documentElement.children[i].attributes['LAT_SITE'].value;
-                    var long = USGS_Data.documentElement.children[i].attributes['LON_SITE'].value;
+                for (i = 1; i < USGS_Count; i++) {
+//                    var gaugeID = USGS_Data.documentElement.children[i].attributes['SITE_NO'].value;
+//                    var waterbody = USGS_Data.documentElement.children[i].attributes['STATION_NM'].value;
+//                    var urlLink = USGS_Data.documentElement.children[i].attributes['NWISWEB'].value;
+//                    var lat = USGS_Data.documentElement.children[i].attributes['LAT_SITE'].value;
+//                    var long = USGS_Data.documentElement.children[i].attributes['LON_SITE'].value;
+
+                    var gaugeID = USGS_Data.documentElement.children[i].children[0].children[2].innerHTML;
+                    var waterbody = USGS_Data.documentElement.children[i].children[0].children[3].innerHTML;
+                    var urlLink = USGS_Data.documentElement.children[i].children[0].children[8].innerHTML;
+                    var lat = USGS_Data.documentElement.children[i].children[0].children[5].innerHTML;
+                    var long = USGS_Data.documentElement.children[i].children[0].children[4].innerHTML;
+
                     var usgshtml = "/apps/gaugeviewwml/usgs/?gaugeid=" + gaugeID +"&waterbody=" + waterbody+"&start=" + two_weeks_ago_str + "&end=" + datestringnow + "&lat=" + lat + "&long=" + long;
                     displayContent += '<tr><td>USGS:\n'+gaugeID +'</td><td>'+ waterbody + '</td><td><a href="'+usgshtml+'" target="_blank">View Data</a></td><td><a href="'+urlLink+'" target="_blank">Go to Website</a></td></tr>';
                     }
@@ -316,28 +324,3 @@ if (window.location.pathname == '/apps/gaugeviewwml/') {
         }
     });
     }
-
-//function run_geocoder(){
-//        g = new google.maps.Geocoder();
-//        search_location = document.getElementById('location_input').value;
-//        g.geocode({'address':search_location},geocoder_success);
-//    };
-//
-//function geocoder_success(results, status) {
-//    if (status == google.maps.GeocoderStatus.OK) {
-//        r=results;
-//        flag_geocoded=true;
-//        Lat = results[0].geometry.location.lat();
-//        Lon = results[0].geometry.location.lng();
-//        var dbPoint = {
-//            "type": "Point",
-//            "coordinates": [Lon, Lat]
-//        }
-//
-//        var coords = ol.proj.transform(dbPoint.coordinates, 'EPSG:4326','EPSG:3857');
-//        map.getView().setCenter(coords);
-//        map.getView().setZoom(12);
-//    } else {
-//        alert("Geocode was not successful for the following reason: " + status);
-//    };
-//};
